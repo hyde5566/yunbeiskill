@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p __TRACKED_VAR__/.claude/skills)",
+      "Bash(cp -r d:/www/云贝skill/yunbeiskill/prd-maker __TRACKED_VAR__/.claude/skills/)",
+      "WebFetch(domain:clawhub.ai)",
+      "WebSearch"
+    ]
+  }
+}
