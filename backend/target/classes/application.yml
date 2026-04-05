@@ -1,0 +1,14 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: yunbei-skill-management
+  profiles:
+    active: dev
+
+jwt:
+  secret: yunbei-skill-management-jwt-secret-key-2024
+  expiration: 86400000
+  header: Authorization
+  prefix: "Bearer "
