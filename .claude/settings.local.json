@@ -121,7 +121,17 @@
       "Bash(rm:*)",
       "Bash(mkdir -p ~/AppData/Local/ms-playwright/chromium_headless_shell-1208)",
       "Bash(unzip -o \"D:/Project/yunbeiskill/chrome-headless-shell-win64.zip\" -d ~/AppData/Local/ms-playwright/chromium_headless_shell-1208/)",
-      "Bash(~/.claude/skills/gstack/browse/dist/browse.exe status:*)"
+      "Bash(~/.claude/skills/gstack/browse/dist/browse.exe status:*)",
+      "Bash(gh auth:*)",
+      "Bash(ssh-add -l)",
+      "Bash(ping:*)",
+      "Bash(git ls-remote:*)",
+      "Bash(GIT_CURL_VERBOSE=1 git clone --depth 1 --single-branch https://github.com/pbakaus/impeccable.git D:/tmp-impeccable)",
+      "Bash(rm -rf C:/Users/XD/AppData/Local/Temp/impeccable-check D:/tmp-impeccable)",
+      "Bash(rm -rf C:/Users/XD/AppData/Local/Temp/skills-*)",
+      "Bash(env)",
+      "Bash(powershell.exe -Command \"[Environment]::GetEnvironmentVariable\\('PATH', 'User'\\)\")",
+      "Bash(powershell.exe -Command \"[Environment]::GetEnvironmentVariable\\('PATH', 'Machine'\\)\")"
     ]
   }
 }
