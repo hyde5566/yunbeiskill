@@ -14,6 +14,16 @@ export class CreateSkillDto {
   @IsString()
   description?: string | null
 
+  @Transform(({ value }) => value === '' ? null : value)
+  @IsOptional()
+  @IsString()
+  detailDescription?: string | null
+
+  @Transform(({ value }) => value === '' ? null : value)
+  @IsOptional()
+  @IsString()
+  author?: string | null
+
   @Transform(({ value }) => {
     if (value === undefined || value === null || value === '') return undefined
     return typeof value === 'string' ? parseInt(value, 10) : value

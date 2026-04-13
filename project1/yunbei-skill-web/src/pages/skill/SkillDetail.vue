@@ -390,9 +390,30 @@ async function handleDownload(version: SkillVersion) {
     const result = await createDownload(skillId, version.id)
     message.success('下载记录已保存')
     loadStats()
+    // 触发实际下载（开发环境使用模拟下载）
+    triggerDownload(result.zipPath, version.versionNumber)
   } catch (error: any) {
     message.error(error.message || '下载失败')
   }
+}
+
+function triggerDownload(zipPath: string, versionNumber: string) {
+  // 创建一个模拟的下载链接
+  // 实际项目中应该使用后端返回的downloadUrl或OSS签名URL
+  const fileName = zipPath.split('/').pop() || `skill-${versionNumber}.zip`
+
+  // 创建一个空的Blob作为模拟文件（实际项目中应该请求真实的文件）
+  const blob = new Blob(['这是一个模拟的Skill文件包，实际项目中请配置OSS存储'], { type: 'application/zip' })
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = fileName
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  window.URL.revokeObjectURL(url)
+
+  message.info(`实际文件路径: ${zipPath}（需配置OSS存储）`)
 }
 
 async function handleFeedbackSubmit() {

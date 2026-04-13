@@ -68,7 +68,7 @@
             <a-upload
               :file-list="fileList"
               :before-upload="beforeUpload"
-              :remove="handleRemove"
+              @remove="handleRemove"
               accept=".zip"
             >
               <a-button>
@@ -111,7 +111,7 @@
             <a-upload
               :file-list="fileList"
               :before-upload="beforeUpload"
-              :remove="handleRemove"
+              @remove="handleRemove"
               accept=".zip"
             >
               <a-button>

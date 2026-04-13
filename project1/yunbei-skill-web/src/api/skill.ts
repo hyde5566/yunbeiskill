@@ -46,6 +46,8 @@ export interface SkillVersion {
 export interface CreateSkillParams {
   name: string
   description?: string | null
+  detailDescription?: string | null
+  author?: string | null
   categoryId: number
   sourceType: 'internal' | 'external'
   sourceName?: string
