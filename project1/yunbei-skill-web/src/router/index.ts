@@ -39,6 +39,61 @@ const routes = [
         name: 'ProjectList',
         component: () => import('@/pages/admin/ProjectList.vue'),
         meta: { permission: 'admin' }
+      },
+      {
+        path: 'admin/categories',
+        name: 'CategoryList',
+        component: () => import('@/pages/admin/CategoryList.vue'),
+        meta: { permission: 'admin' }
+      },
+      {
+        path: 'admin/logs',
+        name: 'OperationLogs',
+        component: () => import('@/pages/admin/OperationLogs.vue'),
+        meta: { permission: 'admin' }
+      },
+      {
+        path: 'admin/login-logs',
+        name: 'LoginLogs',
+        component: () => import('@/pages/admin/LoginLogs.vue'),
+        meta: { permission: 'admin' }
+      },
+      {
+        path: 'admin/stats',
+        name: 'Statistics',
+        component: () => import('@/pages/admin/Statistics.vue'),
+        meta: { permission: 'admin' }
+      },
+      {
+        path: 'skill',
+        name: 'SkillList',
+        component: () => import('@/pages/skill/SkillList.vue')
+      },
+      {
+        path: 'skill/submit',
+        name: 'SkillSubmit',
+        component: () => import('@/pages/skill/SkillSubmit.vue')
+      },
+      {
+        path: 'skill/:id',
+        name: 'SkillDetail',
+        component: () => import('@/pages/skill/SkillDetail.vue')
+      },
+      {
+        path: 'my-downloads',
+        name: 'MyDownloads',
+        component: () => import('@/pages/user/MyDownloads.vue')
+      },
+      {
+        path: 'my-submissions',
+        name: 'MySubmissions',
+        component: () => import('@/pages/user/MySubmissions.vue')
+      },
+      {
+        path: 'review',
+        name: 'ReviewList',
+        component: () => import('@/pages/review/ReviewList.vue'),
+        meta: { permission: 'review' }
       }
     ]
   },
