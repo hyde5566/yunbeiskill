@@ -1,0 +1,93 @@
+<h2>架构方案选择</h2>
+<p class="subtitle">基于小型部署规模(50人以内)，请选择最适合的架构方案</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>简单分层架构（推荐）</h3>
+      <p><strong>特点：</strong>前端 → 后端 → 数据库 → OSS，四层清晰分离</p>
+      <div class="mockup">
+        <div class="mockup-body" style="padding: 16px;">
+          <div style="text-align: center; font-size: 12px;">
+            <div style="border: 2px solid #1890ff; padding: 8px; margin: 4px; border-radius: 4px;">Vue3 SPA</div>
+            <div style="font-size: 10px;">↓ RESTful API</div>
+            <div style="border: 2px solid #52c41a; padding: 8px; margin: 4px; border-radius: 4px;">NestJS</div>
+            <div style="font-size: 10px;">↓</div>
+            <div style="display: flex; justify-content: center; gap: 8px;">
+              <div style="border: 2px solid #faad14; padding: 8px; border-radius: 4px;">MySQL</div>
+              <div style="border: 2px solid #722ed1; padding: 8px; border-radius: 4px;">OSS</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div class="pros"><h4>优点</h4><ul><li>简单清晰，易于开发维护</li><li>部署成本低</li><li>适合小型团队快速落地</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>无缓存层，高频查询需优化</li><li>单实例无冗余</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>带缓存的分层架构</h3>
+      <p><strong>特点：</strong>在方案A基础上增加Redis缓存层</p>
+      <div class="mockup">
+        <div class="mockup-body" style="padding: 16px;">
+          <div style="text-align: center; font-size: 12px;">
+            <div style="border: 2px solid #1890ff; padding: 8px; margin: 4px; border-radius: 4px;">Vue3 SPA</div>
+            <div style="font-size: 10px;">↓</div>
+            <div style="border: 2px solid #52c41a; padding: 8px; margin: 4px; border-radius: 4px;">NestJS</div>
+            <div style="font-size: 10px;">↓</div>
+            <div style="display: flex; justify-content: center; gap: 8px;">
+              <div style="border: 2px solid #eb2f96; padding: 8px; border-radius: 4px;">Redis</div>
+              <div style="border: 2px solid #faad14; padding: 8px; border-radius: 4px;">MySQL</div>
+              <div style="border: 2px solid #722ed1; padding: 8px; border-radius: 4px;">OSS</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div class="pros"><h4>优点</h4><ul><li>缓存热数据，查询性能提升</li><li>Session存储更安全</li><li>为未来扩展预留空间</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>多一个组件维护</li><li>成本略有增加</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>微服务架构</h3>
+      <p><strong>特点：</strong>按业务模块拆分为多个独立服务</p>
+      <div class="mockup">
+        <div class="mockup-body" style="padding: 16px;">
+          <div style="text-align: center; font-size: 10px;">
+            <div style="border: 2px solid #1890ff; padding: 6px; margin: 2px; border-radius: 4px;">Vue3 SPA</div>
+            <div style="font-size: 8px;">↓ API Gateway</div>
+            <div style="display: flex; justify-content: center; gap: 4px; flex-wrap: wrap;">
+              <div style="border: 1px solid #52c41a; padding: 4px; border-radius: 2px; font-size: 9px;">auth-service</div>
+              <div style="border: 1px solid #52c41a; padding: 4px; border-radius: 2px; font-size: 9px;">skill-service</div>
+              <div style="border: 1px solid #52c41a; padding: 4px; border-radius: 2px; font-size: 9px;">review-service</div>
+              <div style="border: 1px solid #52c41a; padding: 4px; border-radius: 2px; font-size: 9px;">user-service</div>
+              <div style="border: 1px solid #52c41a; padding: 4px; border-radius: 2px; font-size: 9px;">file-service</div>
+            </div>
+            <div style="display: flex; justify-content: center; gap: 8px; margin-top: 4px;">
+              <div style="border: 2px solid #faad14; padding: 4px; border-radius: 2px; font-size: 9px;">MySQL</div>
+              <div style="border: 2px solid #eb2f96; padding: 4px; border-radius: 2px; font-size: 9px;">Redis</div>
+              <div style="border: 2px solid #722ed1; padding: 4px; border-radius: 2px; font-size: 9px;">OSS</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div class="pros"><h4>优点</h4><ul><li>高度解耦，独立部署</li><li>故障隔离</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>架构复杂度高</li><li>运维成本大</li><li>小型项目过度设计</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top: 16px; text-align: center; color: #666;">
+  请点击选择一个方案。推荐方案A，小型系统无需过度设计。
+</p>

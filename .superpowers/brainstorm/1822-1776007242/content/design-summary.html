@@ -1,0 +1,94 @@
+<h2>技术架构设计汇总</h2>
+<p class="subtitle">云贝Skill管理系统完整技术蓝图</p>
+
+<div class="section">
+  <h3>技术选型总览</h3>
+  <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+    <tr style="background: #f0f0f0;">
+      <th style="padding: 12px; border: 1px solid #ddd; width: 25%;">层级</th>
+      <th style="padding: 12px; border: 1px solid #ddd;">技术方案</th>
+    </tr>
+    <tr>
+      <td style="padding: 12px; border: 1px solid #ddd;"><strong>前端</strong></td>
+      <td style="padding: 12px; border: 1px solid #ddd;">Vue3 + Ant Design Vue + Pinia + Axios + Vite</td>
+    </tr>
+    <tr>
+      <td style="padding: 12px; border: 1px solid #ddd;"><strong>后端</strong></td>
+      <td style="padding: 12px; border: 1px solid #ddd;">NestJS + TypeScript</td>
+    </tr>
+    <tr>
+      <td style="padding: 12px; border: 1px solid #ddd;"><strong>数据库</strong></td>
+      <td style="padding: 12px; border: 1px solid #ddd;">MySQL 8.0（19张核心表）</td>
+    </tr>
+    <tr>
+      <td style="padding: 12px; border: 1px solid #ddd;"><strong>文件存储</strong></td>
+      <td style="padding: 12px; border: 1px solid #ddd;">阿里云OSS（私有Bucket + 签名URL）</td>
+    </tr>
+    <tr>
+      <td style="padding: 12px; border: 1px solid #ddd;"><strong>部署平台</strong></td>
+      <td style="padding: 12px; border: 1px solid #ddd;">阿里云（ECS + RDS + OSS + CDN）</td>
+    </tr>
+    <tr>
+      <td style="padding: 12px; border: 1px solid #ddd;"><strong>用户认证</strong></td>
+      <td style="padding: 12px; border: 1px solid #ddd;">系统独立登录（账号密码 + JWT）</td>
+    </tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>核心功能模块</h3>
+  <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+    <div style="border: 2px solid #1890ff; padding: 8px 12px; border-radius: 4px; background: #e6f7ff;">Skill检索中心</div>
+    <div style="border: 2px solid #52c41a; padding: 8px 12px; border-radius: 4px; background: #f6ffed;">Skill提交入库</div>
+    <div style="border: 2px solid #faad14; padding: 8px 12px; border-radius: 4px; background: #fffbe6;">审核流程</div>
+    <div style="border: 2px solid #722ed1; padding: 8px 12px; border-radius: 4px; background: #f9f0ff;">版本管理</div>
+    <div style="border: 2px solid #eb2f96; padding: 8px 12px; border-radius: 4px; background: #fff0f6;">评分反馈</div>
+    <div style="border: 2px solid #13c2c2; padding: 8px 12px; border-radius: 4px; background: #e6fffb;">下载记录</div>
+    <div style="border: 2px solid #595959; padding: 8px 12px; border-radius: 4px;">项目管理</div>
+    <div style="border: 2px solid #f5222d; padding: 8px 12px; border-radius: 4px; background: #fff1f0;">组织部门</div>
+    <div style="border: 2px solid #2f54eb; padding: 8px 12px; border-radius: 4px; background: #f0f5ff;">系统管理</div>
+    <div style="border: 2px solid #52c41a; padding: 8px 12px; border-radius: 4px; background: #f6ffed;">统计管理</div>
+    <div style="border: 2px solid #1890ff; padding: 8px 12px; border-radius: 4px; background: #e6f7ff;">站内通知</div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>权限体系</h3>
+  <div class="options" data-multiselect style="pointer-events: none;">
+    <div class="option selected" data-choice="basic">
+      <div class="content">
+        <h3>基础权限</h3>
+        <p style="font-size: 12px;">搜索、下载、提交、评分反馈</p>
+        <p style="font-size: 11px; color: #666;">普通员工</p>
+      </div>
+    </div>
+    <div class="option selected" data-choice="review">
+      <div class="content">
+        <h3>审核权限</h3>
+        <p style="font-size: 12px;">审核流程操作、批准/驳回</p>
+        <p style="font-size: 11px; color: #666;">审核员 = 基础 + 审核</p>
+      </div>
+    </div>
+    <div class="option selected" data-choice="admin">
+      <div class="content">
+        <h3>管理权限</h3>
+        <p style="font-size: 12px;">系统管理、全局统计、导出</p>
+        <p style="font-size: 11px; color: #666;">管理员 = 全部权限</p>
+      </div>
+    </div>
+  </div>
+  <p style="font-size: 12px; color: #666; margin-top: 8px;">三种权限可自由组合配置给任意账号</p>
+</div>
+
+<div class="section">
+  <h3>部署成本估算</h3>
+  <p style="font-size: 14px;"><strong>月费用约 370元</strong>（ECS ~100 + RDS ~200 + OSS ~20 + 域名 ~50）</p>
+  <p style="font-size: 12px; color: #666;">适合50人以内小型团队使用</p>
+</div>
+
+<hr style="margin: 16px 0; border: none; border-top: 1px solid #ddd;">
+
+<p style="text-align: center; font-size: 16px; color: #52c41a; font-weight: bold;">
+  以上是完整技术架构设计汇总。<br>
+  <span style="font-size: 14px;">回复<strong>确认</strong>，我将编写正式设计文档并提交。</span>
+</p>

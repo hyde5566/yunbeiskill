@@ -131,7 +131,18 @@
       "Bash(rm -rf C:/Users/XD/AppData/Local/Temp/skills-*)",
       "Bash(env)",
       "Bash(powershell.exe -Command \"[Environment]::GetEnvironmentVariable\\('PATH', 'User'\\)\")",
-      "Bash(powershell.exe -Command \"[Environment]::GetEnvironmentVariable\\('PATH', 'Machine'\\)\")"
+      "Bash(powershell.exe -Command \"[Environment]::GetEnvironmentVariable\\('PATH', 'Machine'\\)\")",
+      "Bash(curl -L -H \"User-Agent: Mozilla/5.0\" \"https://raw.githubusercontent.com/obra/superpowers/main/README.md\")",
+      "Bash(claude /plugin install superpowers@claude-plugins-official)",
+      "Bash(claude /plugin)",
+      "Bash(gh api:*)",
+      "Bash(python ~/.claude/plugins/marketplaces/superpowers-dev/tests/claude-code/analyze-token-usage.py)",
+      "Bash(python:*)",
+      "Bash(head -100 ~/.claude/projects/D--Project-yunbeiskill/*.jsonl)",
+      "Bash(grep:*)",
+      "Bash(nest new:*)",
+      "Bash(mysql:*)",
+      "Bash(node:*)"
     ]
   }
 }

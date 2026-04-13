@@ -1,0 +1,98 @@
+<h2>部署方案设计</h2>
+<p class="subtitle">阿里云资源组合，小型系统成本可控</p>
+
+<div class="section">
+  <h3>云资源清单</h3>
+  <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+    <tr style="background: #f0f0f0;">
+      <th style="padding: 10px; border: 1px solid #ddd;">资源</th>
+      <th style="padding: 10px; border: 1px solid #ddd;">规格</th>
+      <th style="padding: 10px; border: 1px solid #ddd;">用途</th>
+      <th style="padding: 10px; border: 1px solid #ddd;">月费用（估算）</th>
+    </tr>
+    <tr>
+      <td style="padding: 10px; border: 1px solid #ddd;"><strong>ECS云服务器</strong></td>
+      <td style="padding: 10px; border: 1px solid #ddd;">2核4G</td>
+      <td style="padding: 10px; border: 1px solid #ddd;">运行 NestJS 后端</td>
+      <td style="padding: 10px; border: 1px solid #ddd;">~100元</td>
+    </tr>
+    <tr>
+      <td style="padding: 10px; border: 1px solid #ddd;"><strong>RDS MySQL</strong></td>
+      <td style="padding: 10px; border: 1px solid #ddd;">2核4G，50GB存储</td>
+      <td style="padding: 10px; border: 1px solid #ddd;">业务数据库</td>
+      <td style="padding: 10px; border: 1px solid #ddd;">~200元</td>
+    </tr>
+    <tr>
+      <td style="padding: 10px; border: 1px solid #ddd;"><strong>OSS对象存储</strong></td>
+      <td style="padding: 10px; border: 1px solid #ddd;">标准存储</td>
+      <td style="padding: 10px; border: 1px solid #ddd;">Skill Zip包存储</td>
+      <td style="padding: 10px; border: 1px solid #ddd;">按用量计费，~20元起</td>
+    </tr>
+    <tr>
+      <td style="padding: 10px; border: 1px solid #ddd;"><strong>域名 + SSL证书</strong></td>
+      <td style="padding: 10px; border: 1px solid #ddd;">—</td>
+      <td style="padding: 10px; border: 1px solid #ddd;">HTTPS访问</td>
+      <td style="padding: 10px; border: 1px solid #ddd;">SSL免费，域名~50元</td>
+    </tr>
+    <tr style="background: #f6ffed;">
+      <td style="padding: 10px; border: 1px solid #ddd;"><strong>合计</strong></td>
+      <td style="padding: 10px; border: 1px solid #ddd;">—</td>
+      <td style="padding: 10px; border: 1px solid #ddd;">—</td>
+      <td style="padding: 10px; border: 1px solid #ddd;"><strong>~370元/月</strong></td>
+    </tr>
+  </table>
+  <p style="font-size: 12px; color: #666; margin-top: 8px;">费用仅供参考，实际以阿里云报价为准</p>
+</div>
+
+<div class="section">
+  <h3>部署架构图</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="padding: 16px; text-align: center;">
+      <!-- 用户访问 -->
+      <div style="border: 2px solid #1890ff; padding: 8px 16px; border-radius: 4px; background: #e6f7ff; margin-bottom: 8px;">
+        用户访问 skill.yunbei.com
+      </div>
+      <div style="font-size: 12px; color: #999;">↓ HTTPS（域名解析到OSS）</div>
+
+      <!-- 前端 OSS/CDN -->
+      <div style="border: 2px solid #1890ff; padding: 10px 20px; border-radius: 6px; margin: 8px;">
+        <strong>前端静态文件</strong><br>
+        <span style="font-size: 12px; color: #666;">Vue3打包产物 → OSS存储 + CDN加速</span>
+      </div>
+      <div style="font-size: 12px; color: #999;">↓ API请求</div>
+
+      <!-- 后端 ECS -->
+      <div style="border: 2px solid #52c41a; padding: 10px 20px; border-radius: 6px; background: #f6ffed; margin: 8px;">
+        <strong>ECS云服务器</strong><br>
+        <span style="font-size: 12px; color: #666;">NestJS运行 | Node.js 18+</span>
+      </div>
+      <div style="font-size: 12px; color: #999;">↓ 内网通信</div>
+
+      <!-- 数据层 -->
+      <div style="display: flex; justify-content: center; gap: 16px; margin: 8px;">
+        <div style="border: 2px solid #faad14; padding: 10px 16px; border-radius: 6px; background: #fffbe6;">
+          <strong>RDS MySQL</strong><br>
+          <span style="font-size: 11px;">业务数据</span>
+        </div>
+        <div style="border: 2px solid #722ed1; padding: 10px 16px; border-radius: 6px; background: #f9f0ff;">
+          <strong>OSS</strong><br>
+          <span style="font-size: 11px;">Zip包存储</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>安全配置要点</h3>
+  <ul style="font-size: 13px;">
+    <li><strong>VPC专有网络</strong> — ECS和RDS在同一VPC，内网互通</li>
+    <li><strong>网络安全组</strong> — ECS仅开放443端口，数据库仅内网访问</li>
+    <li><strong>SSL证书</strong> — 全站HTTPS，前端API通信加密</li>
+    <li><strong>OSS私有Bucket</strong> — Zip包不公开，通过签名URL下载（有效期1小时）</li>
+  </ul>
+</div>
+
+<p style="text-align: center; color: #52c41a; font-weight: bold; margin-top: 16px;">
+  部署方案设计是否满意？回复确认进入最终设计汇总。
+</p>
