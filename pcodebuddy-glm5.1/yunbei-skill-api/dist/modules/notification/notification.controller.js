@@ -24,19 +24,19 @@ let NotificationController = class NotificationController {
         this.notificationService = notificationService;
     }
     getMyNotifications(pagination, user) {
-        return this.notificationService.getMyNotifications(user.userId, pagination);
+        return this.notificationService.getMyNotifications(user.id, pagination);
     }
     getUnreadCount(user) {
-        return this.notificationService.getUnreadCount(user.userId);
+        return this.notificationService.getUnreadCount(user.id);
     }
     markAsRead(id, user) {
-        return this.notificationService.markAsRead(id, user.userId);
+        return this.notificationService.markAsRead(id, user.id);
     }
     markAllAsRead(user) {
-        return this.notificationService.markAllAsRead(user.userId);
+        return this.notificationService.markAllAsRead(user.id);
     }
     remove(id, user) {
-        return this.notificationService.remove(id, user.userId);
+        return this.notificationService.remove(id, user.id);
     }
 };
 exports.NotificationController = NotificationController;

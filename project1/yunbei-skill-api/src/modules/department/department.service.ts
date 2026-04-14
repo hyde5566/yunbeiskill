@@ -1,15 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { Department } from './entities/department.entity'
 import { CreateDeptDto } from './dto/create-dept.dto'
 import { UpdateDeptDto } from './dto/update-dept.dto'
+import { User } from '../user/entities/user.entity'
 
 @Injectable()
 export class DepartmentService {
   constructor(
     @InjectRepository(Department)
-    private deptRepo: Repository<Department>
+    private deptRepo: Repository<Department>,
+    @InjectRepository(User)
+    private userRepo: Repository<User>
   ) {}
 
   async create(dto: CreateDeptDto): Promise<Department> {
@@ -35,8 +38,18 @@ export class DepartmentService {
   async update(id: number, dto: UpdateDeptDto): Promise<Department> {
     const dept = await this.findById(id)
     if (dto.parentId !== undefined && dto.parentId !== null) {
+      // 不能将自己设为自己的父部门
+      if (dto.parentId === id) {
+        throw new BadRequestException('不能将自己设为父部门')
+      }
+      // 检查是否会形成循环引用
       const parent = await this.deptRepo.findOne({ where: { id: dto.parentId } })
       if (!parent) throw new NotFoundException('父部门不存在')
+      // 检查新父部门是否是当前部门的子部门
+      const isChild = await this.isChildDepartment(dto.parentId, id)
+      if (isChild) {
+        throw new BadRequestException('不能将子部门设为父部门，会形成循环')
+      }
       dept.level = parent.level + 1
       dept.parentId = dto.parentId
     }
@@ -56,6 +69,11 @@ export class DepartmentService {
     const children = await this.deptRepo.find({ where: { parentId: id } })
     if (children.length > 0) {
       throw new NotFoundException('存在子部门，无法删除')
+    }
+    // 检查是否有用户关联
+    const userCount = await this.userRepo.count({ where: { departmentId: id } })
+    if (userCount > 0) {
+      throw new BadRequestException('存在关联用户，无法删除')
     }
     const dept = await this.findById(id)
     await this.deptRepo.remove(dept)
@@ -82,5 +100,17 @@ export class DepartmentService {
 
   async list(): Promise<Department[]> {
     return this.deptRepo.find({ order: { sortOrder: 'ASC' } })
+  }
+
+  // 检查某个部门是否是另一个部门的子部门（包括多层嵌套）
+  private async isChildDepartment(childId: number, parentId: number): Promise<boolean> {
+    const children = await this.deptRepo.find({ where: { parentId } })
+    for (const child of children) {
+      if (child.id === childId) return true
+      // 递归检查子部门的子部门
+      const isNestedChild = await this.isChildDepartment(childId, child.id)
+      if (isNestedChild) return true
+    }
+    return false
   }
 }

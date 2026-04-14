@@ -1,15 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { SkillCategory } from './entities/skill-category.entity'
 import { CreateCategoryDto } from './dto/create-category.dto'
 import { UpdateCategoryDto } from './dto/update-category.dto'
+import { Skill } from '../skill/entities/skill.entity'
 
 @Injectable()
 export class SkillCategoryService {
   constructor(
     @InjectRepository(SkillCategory)
-    private categoryRepo: Repository<SkillCategory>
+    private categoryRepo: Repository<SkillCategory>,
+    @InjectRepository(Skill)
+    private skillRepo: Repository<Skill>
   ) {}
 
   async create(dto: CreateCategoryDto): Promise<SkillCategory> {
@@ -36,6 +39,11 @@ export class SkillCategoryService {
   }
 
   async remove(id: number): Promise<void> {
+    // 检查是否有Skill关联
+    const skillCount = await this.skillRepo.count({ where: { categoryId: id } })
+    if (skillCount > 0) {
+      throw new BadRequestException('存在关联的Skill，无法删除')
+    }
     const category = await this.findById(id)
     await this.categoryRepo.remove(category)
   }

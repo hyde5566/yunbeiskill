@@ -15,8 +15,8 @@ export const getMySkills = (params?: any) => request.get('/skills/my-submissions
 export const submitVersion = (skillId: number, data: any) => {
   const formData = new FormData()
   formData.append('file', data.file)
-  formData.append('versionNumber', data.versionNumber)
-  formData.append('changeLog', data.changeLog || '')
+  formData.append('version_number', data.versionNumber)
+  formData.append('change_log', data.changeLog || '')
   return request.post(`/skills/${skillId}/versions`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
@@ -35,3 +35,9 @@ export const downloadSkill = (skillId: number, versionId: number) =>
 
 // 管理员：获取所有Skill
 export const getAllSkills = (params?: any) => request.get('/skills/all', { params })
+
+// 重新提交审核
+export const resubmitSkill = (id: number) => request.post(`/skills/${id}/resubmit`)
+
+// 删除Skill
+export const deleteSkill = (id: number) => request.delete(`/skills/${id}`)

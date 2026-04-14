@@ -43,7 +43,7 @@ export class DepartmentService {
 
   private buildTree(departments: Department[], parentId: number | null = null): any[] {
     return departments
-      .filter((d) => d.parent_id === parentId)
+      .filter((d) => Number(d.parent_id) === Number(parentId))
       .map((d) => ({
         ...d,
         children: this.buildTree(departments, d.id),
@@ -62,7 +62,7 @@ export class DepartmentService {
     const department = await this.findOne(id)
 
     if (updateDto.parent_id !== undefined) {
-      if (updateDto.parent_id === id) {
+      if (Number(updateDto.parent_id) === Number(id)) {
         throw new BadRequestException('不能将自己设为父部门')
       }
       if (updateDto.parent_id) {

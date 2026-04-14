@@ -154,7 +154,7 @@ export class StatsService {
 
   // 项目维度统计
   async getProjectStats() {
-    const projects = await this.projectRepo.find()
+    const projects = await this.projectRepo.find({ relations: ['members'] })
     const projectStats = await Promise.all(
       projects.map(async (project) => {
         // 获取该项目可见的Skill数量

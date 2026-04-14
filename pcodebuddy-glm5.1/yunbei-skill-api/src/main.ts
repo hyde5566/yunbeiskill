@@ -15,6 +15,7 @@ async function bootstrap() {
     new ValidationPipe({
       whitelist: true,
       transform: true,
+      transformOptions: { enableImplicitConversion: true },
     }),
   )
 
@@ -24,7 +25,7 @@ async function bootstrap() {
 
   // CORS配置
   app.enableCors({
-    origin: ['http://localhost:5211'],
+    origin: ['http://localhost:5211', 'http://localhost:5173'],
     credentials: true,
   })
 

@@ -32,7 +32,7 @@ export class SkillController {
   @RequirePermission('basic')
   @ApiOperation({ summary: '获取我提交的Skill' })
   mySkills(@Request() req: any) {
-    return this.skillService.list({ userId: req.user.id })
+    return this.skillService.list({ userId: req.user.userId })
   }
 
   @Get('pending-review')
@@ -62,7 +62,7 @@ export class SkillController {
   @RequirePermission('basic')
   @ApiOperation({ summary: '创建Skill' })
   create(@Body() dto: CreateSkillDto, @Request() req: any) {
-    return this.skillService.create(dto, req.user.id)
+    return this.skillService.create(dto, req.user.userId)
   }
 
   // ========== 动态路由 :id ==========
@@ -85,7 +85,7 @@ export class SkillController {
   @RequirePermission('basic')
   @ApiOperation({ summary: '修改并重新提交（用户）' })
   resubmit(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateSkillDto, @Request() req: any) {
-    return this.skillService.resubmit(id, dto, req.user.id)
+    return this.skillService.resubmit(id, dto, req.user.userId)
   }
 
   @Delete(':id')
@@ -110,7 +110,7 @@ export class SkillController {
     @Body() dto: CreateSkillVersionDto,
     @Request() req: any
   ) {
-    return this.skillService.addVersion(id, dto, req.user.id)
+    return this.skillService.addVersion(id, dto, req.user.userId)
   }
 
   @Post(':id/versions/:versionId/approve')

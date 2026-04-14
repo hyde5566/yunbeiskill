@@ -36,16 +36,19 @@ export class ReviewService {
   }
 
   // 获取待审核列表
-  async getPendingReviews(pagination: PaginationDto, reviewerId?: number) {
+  async getPendingReviews(pagination: PaginationDto, reviewerId?: number, isAdmin?: boolean) {
     const query = this.reviewRepository
       .createQueryBuilder('review')
       .leftJoinAndSelect('review.skill', 'skill')
+      .leftJoinAndSelect('skill.submitter', 'submitter')
+      .leftJoinAndSelect('skill.category', 'category')
       .leftJoinAndSelect('review.version', 'version')
       .leftJoinAndSelect('review.reviewer', 'reviewer')
       .where('review.status = :status', { status: 'pending' })
 
-    if (reviewerId) {
-      query.andWhere('review.reviewer_id = :reviewerId', { reviewerId })
+    // 非admin用户只看分配给自己或未分配审核员的待审核任务
+    if (reviewerId && !isAdmin) {
+      query.andWhere('(review.reviewer_id = :reviewerId OR review.reviewer_id IS NULL)', { reviewerId })
     }
 
     const [list, total] = await query
@@ -57,6 +60,27 @@ export class ReviewService {
     return new PaginatedResult(list, total, pagination.page, pagination.pageSize)
   }
 
+  // 获取审核详情
+  async findOne(reviewId: number) {
+    const review = await this.reviewRepository.findOne({
+      where: { id: reviewId },
+      relations: ['skill', 'skill.submitter', 'skill.category', 'version', 'reviewer', 'assigner'],
+    })
+    if (!review) {
+      throw new NotFoundException('审核记录不存在')
+    }
+    return review
+  }
+
+  // 获取某个Skill的所有审核记录（用于详情页历史）
+  async getReviewsBySkillId(skillId: number) {
+    return this.reviewRepository.find({
+      where: { skill_id: skillId },
+      relations: ['reviewer'],
+      order: { created_at: 'DESC' },
+    })
+  }
+
   // 执行审核
   async reviewAction(reviewId: number, actionDto: ReviewActionDto, reviewerId: number) {
     const review = await this.reviewRepository.findOne({
@@ -65,11 +89,17 @@ export class ReviewService {
     if (!review) {
       throw new NotFoundException('审核记录不存在')
     }
-    if (review.reviewer_id !== reviewerId) {
+    // 如果已分配审核员，只有审核员本人可操作；如果未分配，任何有审核权限的人可操作
+    if (review.reviewer_id !== null && Number(review.reviewer_id) !== Number(reviewerId)) {
       throw new BadRequestException('只能审核分配给自己的任务')
     }
     if (review.status !== 'pending') {
       throw new BadRequestException('该审核任务已处理')
+    }
+
+    // 如果未分配审核员，自动分配给当前操作人
+    if (review.reviewer_id === null) {
+      review.reviewer_id = reviewerId
     }
 
     review.status = actionDto.status
@@ -83,6 +113,7 @@ export class ReviewService {
       await this.skillVersionRepository.update(review.version_id, { status: 'approved' })
     } else {
       await this.skillRepository.update(review.skill_id, { status: 'rejected' })
+      await this.skillVersionRepository.update(review.version_id, { status: 'rejected' })
     }
 
     return review
@@ -93,6 +124,8 @@ export class ReviewService {
     const query = this.reviewRepository
       .createQueryBuilder('review')
       .leftJoinAndSelect('review.skill', 'skill')
+      .leftJoinAndSelect('skill.submitter', 'submitter')
+      .leftJoinAndSelect('skill.category', 'category')
       .leftJoinAndSelect('review.reviewer', 'reviewer')
       .leftJoinAndSelect('review.assigner', 'assigner')
 

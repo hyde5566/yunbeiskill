@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { Repository, In } from 'typeorm'
 import * as bcrypt from 'bcryptjs'
 import { User } from '../user/entities/user.entity'
 import { UserPermission } from '../permission/entities/user-permission.entity'
@@ -41,7 +41,8 @@ export class AuthService {
     const payload = {
       sub: user.id,
       username: user.username,
-      permissions
+      permissions,
+      departmentId: user.departmentId
     }
 
     const token = this.jwtService.sign(payload)
@@ -81,7 +82,7 @@ export class AuthService {
     const userPerms = await this.userPermRepo.find({ where: { userId: id } })
     const permIds = userPerms.map(up => up.permissionId)
     if (permIds.length === 0) return []
-    const perms = await this.permRepo.findByIds(permIds)
+    const perms = await this.permRepo.find({ where: { id: In(permIds) } })
     return perms.map(p => p.code)
   }
 }

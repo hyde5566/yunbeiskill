@@ -12,11 +12,17 @@ import {
   UseInterceptors,
   Res,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
+import { InjectRepository } from '@nestjs/typeorm'
+import { Repository } from 'typeorm'
 import { ApiTags, ApiOperation, ApiConsumes, ApiBearerAuth } from '@nestjs/swagger'
 import type { Response } from 'express'
 import { SkillService } from './skill.service'
+import { ProjectService } from '../project/project.service'
+import { DownloadService } from '../download/download.service'
+import { User } from '../user/entities/user.entity'
 import { CreateSkillDto, UpdateSkillDto, SubmitVersionDto, SkillQueryDto } from './dto/skill.dto'
 import { PaginationDto } from '../../common/dto/pagination.dto'
 import { RequirePermission } from '../../common/decorators/public.decorator'
@@ -30,21 +36,28 @@ const uploadDest = process.env.UPLOAD_DEST || './uploads'
 @ApiBearerAuth()
 @Controller('skills')
 export class SkillController {
-  constructor(private readonly skillService: SkillService) {}
+  constructor(
+    private readonly skillService: SkillService,
+    private readonly projectService: ProjectService,
+    private readonly downloadService: DownloadService,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: '获取已发布Skill列表（检索中心）' })
-  findPublished(
+  async findPublished(
     @Query() pagination: PaginationDto,
     @Query() query: SkillQueryDto,
     @CurrentUser() user: any,
   ) {
+    const userProjectIds = await this.projectService.getUserProjectIds(user.id)
     return this.skillService.findPublished(
       pagination,
       query,
-      user.userId,
+      user.id,
       user.permissions,
-      [], // userProjectIds 需要通过ProjectService获取，这里暂时传空
+      userProjectIds,
     )
   }
 
@@ -64,7 +77,7 @@ export class SkillController {
     @Query() pagination: PaginationDto,
     @CurrentUser() user: any,
   ) {
-    return this.skillService.getMySubmissions(pagination, user.userId)
+    return this.skillService.getMySubmissions(pagination, user.id)
   }
 
   @Get(':id')
@@ -76,6 +89,7 @@ export class SkillController {
   @Post()
   @ApiOperation({ summary: '提交新Skill' })
   @UseInterceptors(FileInterceptor('zipFile', {
+    dest: uploadDest,
     limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
     fileFilter: (req, file, cb) => {
       if (file.originalname.endsWith('.zip')) {
@@ -90,25 +104,29 @@ export class SkillController {
     @UploadedFile() zipFile: Express.Multer.File,
     @CurrentUser() user: any,
   ) {
+    if (!zipFile) {
+      throw new BadRequestException('请上传Zip文件')
+    }
     const zipPath = zipFile.path
     const zipSize = zipFile.size
-    return this.skillService.create(createDto, user.userId, zipPath, zipSize)
+    return this.skillService.create(createDto, user.id, zipPath, zipSize)
   }
 
   @Put(':id')
-  @RequirePermission('admin')
   @ApiOperation({ summary: '编辑Skill' })
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDto: UpdateSkillDto,
     @CurrentUser() user: any,
   ) {
-    return this.skillService.update(id, updateDto, user.userId)
+    const isAdmin = user.permissions?.includes('admin')
+    return this.skillService.update(id, updateDto, user.id, isAdmin)
   }
 
   @Post(':id/versions')
   @ApiOperation({ summary: '提交新版本' })
   @UseInterceptors(FileInterceptor('zipFile', {
+    dest: uploadDest,
     limits: { fileSize: 50 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
       if (file.originalname.endsWith('.zip')) {
@@ -124,7 +142,7 @@ export class SkillController {
     @UploadedFile() zipFile: Express.Multer.File,
     @CurrentUser() user: any,
   ) {
-    return this.skillService.submitVersion(id, dto, user.userId, zipFile.path, zipFile.size)
+    return this.skillService.submitVersion(id, dto, user.id, zipFile.path, zipFile.size)
   }
 
   @Get(':id/versions')
@@ -147,17 +165,38 @@ export class SkillController {
     return this.skillService.offline(id)
   }
 
+  @Post(':id/resubmit')
+  @ApiOperation({ summary: '重新提交审核' })
+  resubmit(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+    return this.skillService.resubmit(id, user.id)
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: '删除Skill' })
+  async remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+    const isAdmin = user.permissions?.includes('admin')
+    return this.skillService.remove(id, user.id, isAdmin)
+  }
+
   @Get(':skillId/versions/:versionId/download')
   @ApiOperation({ summary: '下载Skill Zip包' })
   async downloadZip(
     @Param('skillId', ParseIntPipe) skillId: number,
     @Param('versionId', ParseIntPipe) versionId: number,
+    @CurrentUser() user: any,
     @Res() res: Response,
   ) {
     const { filePath, fileName } = await this.skillService.getDownloadInfo(skillId, versionId)
     if (!fs.existsSync(filePath)) {
       throw new NotFoundException('文件不存在')
     }
+
+    // 记录下载
+    const dbUser = await this.userRepository.findOne({ where: { id: user.id } })
+    if (dbUser) {
+      await this.downloadService.recordDownload(user.id, skillId, versionId, dbUser.department_id)
+    }
+
     res.download(filePath, fileName)
   }
 }

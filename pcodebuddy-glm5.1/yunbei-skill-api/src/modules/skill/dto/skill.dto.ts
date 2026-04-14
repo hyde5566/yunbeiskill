@@ -1,5 +1,6 @@
 import { IsNotEmpty, IsString, IsInt, IsOptional, IsArray, IsEnum } from 'class-validator'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { Transform } from 'class-transformer'
 
 export class CreateSkillDto {
   @ApiProperty({ description: 'Skill名称' })
@@ -24,6 +25,7 @@ export class CreateSkillDto {
 
   @ApiProperty({ description: '分类ID' })
   @IsNotEmpty({ message: '分类不能为空' })
+  @Transform(({ value }) => { if (value === null || value === undefined || value === '') return undefined; return typeof value === 'string' ? parseInt(value, 10) : value })
   @IsInt()
   category_id: number
 
@@ -44,6 +46,7 @@ export class CreateSkillDto {
 
   @ApiPropertyOptional({ description: '关联项目ID列表' })
   @IsOptional()
+  @Transform(({ value }) => { if (!value) return undefined; try { const parsed = typeof value === 'string' ? JSON.parse(value) : value; return Array.isArray(parsed) ? parsed : undefined } catch { return undefined } })
   @IsArray()
   project_ids?: number[]
 
@@ -54,6 +57,7 @@ export class CreateSkillDto {
 
   @ApiPropertyOptional({ description: '可见账号ID列表（指定账号可见时必填）' })
   @IsOptional()
+  @Transform(({ value }) => { if (!value) return undefined; try { const parsed = typeof value === 'string' ? JSON.parse(value) : value; return Array.isArray(parsed) ? parsed : undefined } catch { return undefined } })
   @IsArray()
   visibility_account_ids?: number[]
 
@@ -62,10 +66,10 @@ export class CreateSkillDto {
   @IsString()
   version_number: string
 
-  @ApiProperty({ description: '更新说明' })
-  @IsNotEmpty({ message: '更新说明不能为空' })
+  @ApiPropertyOptional({ description: '更新说明' })
+  @IsOptional()
   @IsString()
-  change_log: string
+  change_log?: string
 }
 
 export class UpdateSkillDto {
@@ -91,6 +95,7 @@ export class UpdateSkillDto {
 
   @ApiPropertyOptional({ description: '分类ID' })
   @IsOptional()
+  @Transform(({ value }) => { if (value === null || value === undefined || value === '') return undefined; return typeof value === 'string' ? parseInt(value, 10) : value })
   @IsInt()
   category_id?: number
 
@@ -111,6 +116,7 @@ export class UpdateSkillDto {
 
   @ApiPropertyOptional({ description: '关联项目ID列表' })
   @IsOptional()
+  @Transform(({ value }) => { if (!value) return undefined; try { const parsed = typeof value === 'string' ? JSON.parse(value) : value; return Array.isArray(parsed) ? parsed : undefined } catch { return undefined } })
   @IsArray()
   project_ids?: number[]
 
@@ -121,6 +127,7 @@ export class UpdateSkillDto {
 
   @ApiPropertyOptional({ description: '可见账号ID列表' })
   @IsOptional()
+  @Transform(({ value }) => { if (!value) return undefined; try { const parsed = typeof value === 'string' ? JSON.parse(value) : value; return Array.isArray(parsed) ? parsed : undefined } catch { return undefined } })
   @IsArray()
   visibility_account_ids?: number[]
 }
@@ -131,10 +138,10 @@ export class SubmitVersionDto {
   @IsString()
   version_number: string
 
-  @ApiProperty({ description: '更新说明' })
-  @IsNotEmpty({ message: '更新说明不能为空' })
+  @ApiPropertyOptional({ description: '更新说明' })
+  @IsOptional()
   @IsString()
-  change_log: string
+  change_log?: string
 }
 
 export class SkillQueryDto {
@@ -145,6 +152,7 @@ export class SkillQueryDto {
 
   @ApiPropertyOptional({ description: '分类ID' })
   @IsOptional()
+  @Transform(({ value }) => { if (value === null || value === undefined || value === '') return undefined; return typeof value === 'string' ? parseInt(value, 10) : value })
   @IsInt()
   category_id?: number
 

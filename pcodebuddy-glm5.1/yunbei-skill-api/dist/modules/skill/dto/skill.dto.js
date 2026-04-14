@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SkillQueryDto = exports.SubmitVersionDto = exports.UpdateSkillDto = exports.CreateSkillDto = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
+const class_transformer_1 = require("class-transformer");
 class CreateSkillDto {
     name;
     summary;
@@ -55,6 +56,8 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiProperty)({ description: '分类ID' }),
     (0, class_validator_1.IsNotEmpty)({ message: '分类不能为空' }),
+    (0, class_transformer_1.Transform)(({ value }) => { if (value === null || value === undefined || value === '')
+        return undefined; return typeof value === 'string' ? parseInt(value, 10) : value; }),
     (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
 ], CreateSkillDto.prototype, "category_id", void 0);
@@ -79,6 +82,14 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({ description: '关联项目ID列表' }),
     (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Transform)(({ value }) => { if (!value)
+        return undefined; try {
+        const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+        return Array.isArray(parsed) ? parsed : undefined;
+    }
+    catch {
+        return undefined;
+    } }),
     (0, class_validator_1.IsArray)(),
     __metadata("design:type", Array)
 ], CreateSkillDto.prototype, "project_ids", void 0);
@@ -91,6 +102,14 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({ description: '可见账号ID列表（指定账号可见时必填）' }),
     (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Transform)(({ value }) => { if (!value)
+        return undefined; try {
+        const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+        return Array.isArray(parsed) ? parsed : undefined;
+    }
+    catch {
+        return undefined;
+    } }),
     (0, class_validator_1.IsArray)(),
     __metadata("design:type", Array)
 ], CreateSkillDto.prototype, "visibility_account_ids", void 0);
@@ -101,8 +120,8 @@ __decorate([
     __metadata("design:type", String)
 ], CreateSkillDto.prototype, "version_number", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: '更新说明' }),
-    (0, class_validator_1.IsNotEmpty)({ message: '更新说明不能为空' }),
+    (0, swagger_1.ApiPropertyOptional)({ description: '更新说明' }),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateSkillDto.prototype, "change_log", void 0);
@@ -147,6 +166,8 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({ description: '分类ID' }),
     (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Transform)(({ value }) => { if (value === null || value === undefined || value === '')
+        return undefined; return typeof value === 'string' ? parseInt(value, 10) : value; }),
     (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
 ], UpdateSkillDto.prototype, "category_id", void 0);
@@ -171,6 +192,14 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({ description: '关联项目ID列表' }),
     (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Transform)(({ value }) => { if (!value)
+        return undefined; try {
+        const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+        return Array.isArray(parsed) ? parsed : undefined;
+    }
+    catch {
+        return undefined;
+    } }),
     (0, class_validator_1.IsArray)(),
     __metadata("design:type", Array)
 ], UpdateSkillDto.prototype, "project_ids", void 0);
@@ -183,6 +212,14 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({ description: '可见账号ID列表' }),
     (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Transform)(({ value }) => { if (!value)
+        return undefined; try {
+        const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+        return Array.isArray(parsed) ? parsed : undefined;
+    }
+    catch {
+        return undefined;
+    } }),
     (0, class_validator_1.IsArray)(),
     __metadata("design:type", Array)
 ], UpdateSkillDto.prototype, "visibility_account_ids", void 0);
@@ -198,8 +235,8 @@ __decorate([
     __metadata("design:type", String)
 ], SubmitVersionDto.prototype, "version_number", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: '更新说明' }),
-    (0, class_validator_1.IsNotEmpty)({ message: '更新说明不能为空' }),
+    (0, swagger_1.ApiPropertyOptional)({ description: '更新说明' }),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], SubmitVersionDto.prototype, "change_log", void 0);
@@ -219,6 +256,8 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({ description: '分类ID' }),
     (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Transform)(({ value }) => { if (value === null || value === undefined || value === '')
+        return undefined; return typeof value === 'string' ? parseInt(value, 10) : value; }),
     (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
 ], SkillQueryDto.prototype, "category_id", void 0);

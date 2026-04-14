@@ -10,7 +10,9 @@ export declare class ReviewService {
     private skillVersionRepository;
     constructor(reviewRepository: Repository<Review>, skillRepository: Repository<Skill>, skillVersionRepository: Repository<SkillVersion>);
     assignReviewer(assignDto: AssignReviewerDto, assignedBy: number): Promise<Review>;
-    getPendingReviews(pagination: PaginationDto, reviewerId?: number): Promise<PaginatedResult<Review>>;
+    getPendingReviews(pagination: PaginationDto, reviewerId?: number, isAdmin?: boolean): Promise<PaginatedResult<Review>>;
+    findOne(reviewId: number): Promise<Review>;
+    getReviewsBySkillId(skillId: number): Promise<Review[]>;
     reviewAction(reviewId: number, actionDto: ReviewActionDto, reviewerId: number): Promise<Review>;
     getReviewHistory(pagination: PaginationDto, skillId?: number): Promise<PaginatedResult<Review>>;
 }

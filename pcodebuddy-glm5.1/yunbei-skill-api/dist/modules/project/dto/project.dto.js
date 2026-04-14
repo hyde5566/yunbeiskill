@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AddProjectSkillDto = exports.AddProjectMembersDto = exports.UpdateProjectDto = exports.CreateProjectDto = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
+const class_transformer_1 = require("class-transformer");
 class CreateProjectDto {
     name;
     description;
@@ -33,6 +34,8 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiProperty)({ description: '项目负责人ID' }),
     (0, class_validator_1.IsNotEmpty)({ message: '项目负责人不能为空' }),
+    (0, class_transformer_1.Transform)(({ value }) => { if (value === null || value === undefined || value === '')
+        return undefined; return typeof value === 'string' ? parseInt(value, 10) : value; }),
     (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
 ], CreateProjectDto.prototype, "owner_id", void 0);
@@ -58,6 +61,8 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({ description: '项目负责人ID' }),
     (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Transform)(({ value }) => { if (value === null || value === undefined || value === '')
+        return undefined; return typeof value === 'string' ? parseInt(value, 10) : value; }),
     (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
 ], UpdateProjectDto.prototype, "owner_id", void 0);

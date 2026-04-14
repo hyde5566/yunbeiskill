@@ -24,13 +24,13 @@ let RatingController = class RatingController {
         this.ratingService = ratingService;
     }
     create(createDto, user) {
-        return this.ratingService.create(createDto, user.userId);
+        return this.ratingService.create(createDto, user.id);
     }
     getSkillRatings(skillId) {
         return this.ratingService.getSkillRatings(skillId);
     }
     getMyRatings(user) {
-        return this.ratingService.getMyRatings(user.userId);
+        return this.ratingService.getMyRatings(user.id);
     }
 };
 exports.RatingController = RatingController;

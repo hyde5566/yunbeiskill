@@ -41,15 +41,17 @@ let ReviewService = class ReviewService {
         await this.skillRepository.update(assignDto.skill_id, { status: 'reviewing' });
         return saved;
     }
-    async getPendingReviews(pagination, reviewerId) {
+    async getPendingReviews(pagination, reviewerId, isAdmin) {
         const query = this.reviewRepository
             .createQueryBuilder('review')
             .leftJoinAndSelect('review.skill', 'skill')
+            .leftJoinAndSelect('skill.submitter', 'submitter')
+            .leftJoinAndSelect('skill.category', 'category')
             .leftJoinAndSelect('review.version', 'version')
             .leftJoinAndSelect('review.reviewer', 'reviewer')
             .where('review.status = :status', { status: 'pending' });
-        if (reviewerId) {
-            query.andWhere('review.reviewer_id = :reviewerId', { reviewerId });
+        if (reviewerId && !isAdmin) {
+            query.andWhere('(review.reviewer_id = :reviewerId OR review.reviewer_id IS NULL)', { reviewerId });
         }
         const [list, total] = await query
             .skip(pagination.skip)
@@ -58,6 +60,23 @@ let ReviewService = class ReviewService {
             .getManyAndCount();
         return new pagination_dto_1.PaginatedResult(list, total, pagination.page, pagination.pageSize);
     }
+    async findOne(reviewId) {
+        const review = await this.reviewRepository.findOne({
+            where: { id: reviewId },
+            relations: ['skill', 'skill.submitter', 'skill.category', 'version', 'reviewer', 'assigner'],
+        });
+        if (!review) {
+            throw new common_1.NotFoundException('审核记录不存在');
+        }
+        return review;
+    }
+    async getReviewsBySkillId(skillId) {
+        return this.reviewRepository.find({
+            where: { skill_id: skillId },
+            relations: ['reviewer'],
+            order: { created_at: 'DESC' },
+        });
+    }
     async reviewAction(reviewId, actionDto, reviewerId) {
         const review = await this.reviewRepository.findOne({
             where: { id: reviewId },
@@ -65,11 +84,14 @@ let ReviewService = class ReviewService {
         if (!review) {
             throw new common_1.NotFoundException('审核记录不存在');
         }
-        if (review.reviewer_id !== reviewerId) {
+        if (review.reviewer_id !== null && Number(review.reviewer_id) !== Number(reviewerId)) {
             throw new common_1.BadRequestException('只能审核分配给自己的任务');
         }
         if (review.status !== 'pending') {
             throw new common_1.BadRequestException('该审核任务已处理');
+        }
+        if (review.reviewer_id === null) {
+            review.reviewer_id = reviewerId;
         }
         review.status = actionDto.status;
         review.comment = actionDto.comment || '';
@@ -81,6 +103,7 @@ let ReviewService = class ReviewService {
         }
         else {
             await this.skillRepository.update(review.skill_id, { status: 'rejected' });
+            await this.skillVersionRepository.update(review.version_id, { status: 'rejected' });
         }
         return review;
     }
@@ -88,6 +111,8 @@ let ReviewService = class ReviewService {
         const query = this.reviewRepository
             .createQueryBuilder('review')
             .leftJoinAndSelect('review.skill', 'skill')
+            .leftJoinAndSelect('skill.submitter', 'submitter')
+            .leftJoinAndSelect('skill.category', 'category')
             .leftJoinAndSelect('review.reviewer', 'reviewer')
             .leftJoinAndSelect('review.assigner', 'assigner');
         if (skillId) {

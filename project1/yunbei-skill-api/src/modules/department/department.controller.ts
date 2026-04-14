@@ -12,12 +12,14 @@ export class DepartmentController {
   constructor(private deptService: DepartmentService) {}
 
   @Get()
+  @RequirePermission('basic')
   @ApiOperation({ summary: '获取部门列表' })
   async list() {
     return this.deptService.list()
   }
 
   @Get('tree')
+  @RequirePermission('basic')
   @ApiOperation({ summary: '获取部门树形结构' })
   async getTree() {
     return this.deptService.getTree()

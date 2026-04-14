@@ -58,8 +58,8 @@
             <div class="skill-card-body">
               <div class="skill-header">
                 <h3 class="skill-name">{{ skill.name }}</h3>
-                <a-tag :color="skill.source === 'internal' ? 'blue' : 'green'">
-                  {{ skill.source === 'internal' ? '内部自研' : '外部平台' }}
+                <a-tag :color="skill.source_type === 'internal' ? 'blue' : 'green'">
+                  {{ skill.source_type === 'internal' ? '内部自研' : '外部平台' }}
                 </a-tag>
               </div>
               <p class="skill-summary">{{ skill.summary || '暂无简介' }}</p>
@@ -68,16 +68,16 @@
                   <UserOutlined /> {{ skill.author || '未知' }}
                 </span>
                 <span class="meta-item">
-                  <a-tag color="processing" size="small">{{ skill.categoryName }}</a-tag>
+                  <a-tag color="processing" size="small">{{ skill.category?.name || '-' }}</a-tag>
                 </span>
                 <span class="meta-item">
-                  <StarFilled style="color: #faad14" /> {{ skill.avgRating?.toFixed(1) || '-' }}
+                  <StarFilled style="color: #faad14" /> {{ skill.avg_rating?.toFixed(1) || '-' }}
                 </span>
                 <span class="meta-item">
-                  <DownloadOutlined /> {{ skill.downloadCount || 0 }}
+                  <DownloadOutlined /> {{ skill.download_count || 0 }}
                 </span>
                 <span class="meta-item version">
-                  v{{ skill.latestVersion || '1.0.0' }}
+                  v{{ skill.latest_version || '1.0.0' }}
                 </span>
               </div>
             </div>

@@ -34,14 +34,14 @@
           </a-select>
         </a-form-item>
 
-        <a-form-item label="来源" name="source">
-          <a-radio-group v-model:value="form.source">
+        <a-form-item label="来源" name="sourceType">
+          <a-radio-group v-model:value="form.sourceType">
             <a-radio value="internal">内部自研</a-radio>
             <a-radio value="external">外部平台</a-radio>
           </a-radio-group>
         </a-form-item>
 
-        <template v-if="form.source === 'external'">
+        <template v-if="form.sourceType === 'external'">
           <a-form-item label="来源网址名称" name="sourceUrlName">
             <a-input v-model:value="form.sourceUrlName" placeholder="如 clawhub.ai" :maxlength="100" />
           </a-form-item>
@@ -66,11 +66,11 @@
           <a-radio-group v-model:value="form.visibilityType">
             <a-radio value="all">全部可见</a-radio>
             <a-radio value="project">按项目成员可见</a-radio>
-            <a-radio value="custom">指定账号可见</a-radio>
+            <a-radio value="account">指定账号可见</a-radio>
           </a-radio-group>
         </a-form-item>
 
-        <a-form-item v-if="form.visibilityType === 'custom'" label="可见账号" name="visibleUserIds">
+        <a-form-item v-if="form.visibilityType === 'account'" label="可见账号" name="visibleUserIds">
           <a-select
             v-model:value="form.visibleUserIds"
             mode="multiple"
@@ -84,7 +84,7 @@
 
         <a-divider orientation="left">文件上传</a-divider>
 
-        <a-form-item label="Zip包" name="zipFile" :rules="[{ required: !isEdit, message: '请上传Zip包' }]">
+        <a-form-item label="Zip包">
           <a-upload
             :file-list="fileList"
             :before-upload="beforeUpload"
@@ -97,13 +97,17 @@
           <div style="color: #8c8c8c; font-size: 12px; margin-top: 4px">仅支持.zip格式，最大50MB</div>
         </a-form-item>
 
+        <a-form-item label="版本号" name="versionNumber">
+          <a-input v-model:value="form.versionNumber" placeholder="如 1.0.0" :maxlength="20" />
+        </a-form-item>
+
         <a-form-item label="版本更新说明" name="changeLog">
           <a-textarea v-model:value="form.changeLog" placeholder="请描述本版本的更新内容" :rows="3" />
         </a-form-item>
 
         <a-form-item :wrapper-col="{ offset: 4, span: 16 }">
           <a-space>
-            <a-button type="primary" @click="handleSubmit('pending')" :loading="submitting">提交审核</a-button>
+            <a-button type="primary" @click="handleSubmit('pending_review')" :loading="submitting">提交审核</a-button>
             <a-button @click="handleSubmit('draft')" :loading="submitting">保存草稿</a-button>
             <a-button @click="$router.back()">取消</a-button>
           </a-space>
@@ -141,21 +145,25 @@ const form = ref({
   detail: '',
   author: '',
   categoryId: undefined as number | undefined,
-  source: 'internal',
+  sourceType: 'internal',
   sourceUrlName: '',
   sourceUrl: '',
   projectIds: [] as number[],
   visibilityType: 'all',
   visibleUserIds: [] as number[],
   changeLog: '',
+  versionNumber: '',
   status: 'pending',
 })
 
 const rules = {
   name: [{ required: true, message: '请输入Skill名称' }],
   summary: [{ required: true, message: '请输入简介' }],
+  detail: [{ required: true, message: '请输入详细说明' }],
+  author: [{ required: true, message: '请输入作者' }],
   categoryId: [{ required: true, message: '请选择分类' }],
-  source: [{ required: true, message: '请选择来源' }],
+  sourceType: [{ required: true, message: '请选择来源' }],
+  versionNumber: [{ required: true, message: '请输入版本号' }],
   visibilityType: [{ required: true, message: '请选择可见范围' }],
 }
 
@@ -196,14 +204,15 @@ async function loadSkillDetail() {
       summary: data.summary,
       detail: data.detail,
       author: data.author,
-      categoryId: data.categoryId,
-      source: data.source,
-      sourceUrlName: data.sourceUrlName,
-      sourceUrl: data.sourceUrl,
-      projectIds: data.projectIds || [],
-      visibilityType: data.visibilityType,
-      visibleUserIds: data.visibleUserIds || [],
+      categoryId: data.category_id,
+      sourceType: data.source_type,
+      sourceUrlName: data.source_url_name || '',
+      sourceUrl: data.source_url || '',
+      projectIds: data.project_ids || [],
+      visibilityType: data.visibility_type,
+      visibleUserIds: data.visibility_account_ids || [],
       changeLog: '',
+      versionNumber: '',
       status: data.status,
     }
   } catch { /* ignore */ }
@@ -253,14 +262,19 @@ async function handleSubmit(status: string) {
     formData.append('summary', form.value.summary)
     formData.append('detail', form.value.detail)
     formData.append('author', form.value.author)
-    formData.append('categoryId', String(form.value.categoryId))
-    formData.append('source', form.value.source)
-    formData.append('sourceUrlName', form.value.sourceUrlName)
-    formData.append('sourceUrl', form.value.sourceUrl)
-    formData.append('projectIds', JSON.stringify(form.value.projectIds))
-    formData.append('visibilityType', form.value.visibilityType)
-    formData.append('visibleUserIds', JSON.stringify(form.value.visibleUserIds))
-    formData.append('changeLog', form.value.changeLog)
+    formData.append('category_id', String(form.value.categoryId))
+    formData.append('source_type', form.value.sourceType)
+    if (form.value.sourceUrlName) formData.append('source_url_name', form.value.sourceUrlName)
+    if (form.value.sourceUrl) formData.append('source_url', form.value.sourceUrl)
+    if (form.value.projectIds && form.value.projectIds.length > 0) {
+      formData.append('project_ids', JSON.stringify(form.value.projectIds))
+    }
+    formData.append('visibility_type', form.value.visibilityType)
+    if (form.value.visibilityType === 'account' && form.value.visibleUserIds && form.value.visibleUserIds.length > 0) {
+      formData.append('visibility_account_ids', JSON.stringify(form.value.visibleUserIds))
+    }
+    formData.append('version_number', form.value.versionNumber || '1.0.0')
+    if (form.value.changeLog) formData.append('change_log', form.value.changeLog)
     formData.append('status', status)
     if (zipFile.value) {
       formData.append('zipFile', zipFile.value)
@@ -271,7 +285,7 @@ async function handleSubmit(status: string) {
       message.success('更新成功')
     } else {
       await submitSkill(formData)
-      message.success(status === 'pending' ? '已提交审核' : '已保存草稿')
+      message.success(status === 'pending_review' ? '已提交审核' : '已保存草稿')
     }
     router.push('/skill/my-submissions')
   } catch {

@@ -29,13 +29,20 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     if (queryToken) {
       try {
         const payload = this.jwtService.verify(queryToken)
-        request.user = payload
+        // 标准化payload字段，与jwt.strategy.ts保持一致
+        request.user = {
+          userId: payload.sub,
+          username: payload.username,
+          permissions: payload.permissions,
+          departmentId: payload.departmentId
+        }
         return true
       } catch (e) {
         throw new UnauthorizedException('Token无效或已过期')
       }
     }
 
+    // 对于非公开接口，调用父类进行JWT验证
     return super.canActivate(context)
   }
 

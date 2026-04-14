@@ -4,9 +4,10 @@ import { ProjectController } from './project.controller'
 import { ProjectService } from './project.service'
 import { Project } from './entities/project.entity'
 import { User } from '../user/entities/user.entity'
+import { SkillVisibility } from '../skill/entities/skill-visibility.entity'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Project, User])],
+  imports: [TypeOrmModule.forFeature([Project, User, SkillVisibility])],
   controllers: [ProjectController],
   providers: [ProjectService],
   exports: [ProjectService]

@@ -25,9 +25,9 @@ export class Review {
   @Column({ type: 'bigint' })
   version_id: number
 
-  @ApiProperty({ description: '审核人ID' })
-  @Column({ type: 'bigint' })
-  reviewer_id: number
+  @ApiProperty({ description: '审核人ID（未分配时为null）' })
+  @Column({ type: 'bigint', nullable: true })
+  reviewer_id: number | null
 
   @ApiProperty({ description: '分配人ID' })
   @Column({ type: 'bigint', nullable: true })

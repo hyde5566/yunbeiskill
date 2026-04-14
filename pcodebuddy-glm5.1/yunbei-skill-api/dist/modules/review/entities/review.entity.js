@@ -47,9 +47,9 @@ __decorate([
     __metadata("design:type", Number)
 ], Review.prototype, "version_id", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: '审核人ID' }),
-    (0, typeorm_1.Column)({ type: 'bigint' }),
-    __metadata("design:type", Number)
+    (0, swagger_1.ApiProperty)({ description: '审核人ID（未分配时为null）' }),
+    (0, typeorm_1.Column)({ type: 'bigint', nullable: true }),
+    __metadata("design:type", Object)
 ], Review.prototype, "reviewer_id", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ description: '分配人ID' }),

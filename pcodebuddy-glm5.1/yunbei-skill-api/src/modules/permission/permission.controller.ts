@@ -29,6 +29,6 @@ export class PermissionController {
     @Body() assignDto: AssignPermissionsDto,
     @CurrentUser() user: any,
   ) {
-    return this.permissionService.assignPermissions(assignDto, user.userId)
+    return this.permissionService.assignPermissions(assignDto, user.id)
   }
 }

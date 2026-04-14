@@ -26,13 +26,13 @@ let FeedbackController = class FeedbackController {
         this.feedbackService = feedbackService;
     }
     create(createDto, user) {
-        return this.feedbackService.create(createDto, user.userId);
+        return this.feedbackService.create(createDto, user.id);
     }
     getSkillFeedbacks(skillId, pagination) {
         return this.feedbackService.getSkillFeedbacks(skillId, pagination);
     }
     getMyFeedbacks(user) {
-        return this.feedbackService.getMyFeedbacks(user.userId);
+        return this.feedbackService.getMyFeedbacks(user.id);
     }
     findAll(pagination) {
         return this.feedbackService.findAll(pagination);

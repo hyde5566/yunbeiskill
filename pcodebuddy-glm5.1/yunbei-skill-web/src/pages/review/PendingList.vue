@@ -14,6 +14,18 @@
         @change="handleTableChange"
       >
         <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'skillName'">
+            {{ record.skill?.name || '-' }}
+          </template>
+          <template v-if="column.key === 'submitterName'">
+            {{ record.skill?.submitter?.real_name || '-' }}
+          </template>
+          <template v-if="column.key === 'categoryName'">
+            {{ record.skill?.category?.name || '-' }}
+          </template>
+          <template v-if="column.key === 'reviewerName'">
+            {{ record.reviewer?.real_name || '待分配' }}
+          </template>
           <template v-if="column.key === 'status'">
             <a-tag v-if="record.status === 'pending'" color="default">待审核</a-tag>
             <a-tag v-else-if="record.status === 'reviewing'" color="processing">审核中</a-tag>
@@ -21,7 +33,7 @@
             <a-tag v-else-if="record.status === 'rejected'" color="error">驳回</a-tag>
           </template>
           <template v-if="column.key === 'createdAt'">
-            {{ formatDate(record.createdAt) }}
+            {{ formatDate(record.created_at) }}
           </template>
           <template v-if="column.key === 'action'">
             <a-button type="link" size="small" @click="$router.push(`/review/detail/${record.id}`)">
@@ -42,9 +54,10 @@ const loading = ref(false)
 const reviews = ref<any[]>([])
 
 const columns = [
-  { title: 'Skill名称', dataIndex: 'skillName', key: 'skillName', ellipsis: true },
-  { title: '提交人', dataIndex: 'submitterName', key: 'submitterName', width: 100 },
-  { title: '分类', dataIndex: 'categoryName', key: 'categoryName', width: 100 },
+  { title: 'Skill名称', key: 'skillName', ellipsis: true },
+  { title: '提交人', key: 'submitterName', width: 100 },
+  { title: '分类', key: 'categoryName', width: 100 },
+  { title: '审核人', key: 'reviewerName', width: 100 },
   { title: '状态', key: 'status', width: 100 },
   { title: '提交时间', key: 'createdAt', width: 160 },
   { title: '操作', key: 'action', width: 100 },

@@ -14,7 +14,7 @@ export class FeedbackController {
   @Post()
   @ApiOperation({ summary: '提交反馈' })
   create(@Body() createDto: CreateFeedbackDto, @CurrentUser() user: any) {
-    return this.feedbackService.create(createDto, user.userId)
+    return this.feedbackService.create(createDto, user.id)
   }
 
   @Get('skill/:skillId')
@@ -29,7 +29,7 @@ export class FeedbackController {
   @Get('my')
   @ApiOperation({ summary: '我的反馈记录' })
   getMyFeedbacks(@CurrentUser() user: any) {
-    return this.feedbackService.getMyFeedbacks(user.userId)
+    return this.feedbackService.getMyFeedbacks(user.id)
   }
 
   @Get('all')

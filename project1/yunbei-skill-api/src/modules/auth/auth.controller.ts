@@ -20,6 +20,6 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: '获取当前用户信息' })
   async getUserInfo(@Request() req) {
-    return this.authService.getUserInfo(req.user.id)
+    return this.authService.getUserInfo(req.user.userId)
   }
 }

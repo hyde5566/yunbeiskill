@@ -5,7 +5,7 @@ export declare class Review {
     id: number;
     skill_id: number;
     version_id: number;
-    reviewer_id: number;
+    reviewer_id: number | null;
     assigned_by: number;
     status: string;
     comment: string;

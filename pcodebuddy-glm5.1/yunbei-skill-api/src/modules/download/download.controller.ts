@@ -16,7 +16,7 @@ export class DownloadController {
     @Query() pagination: PaginationDto,
     @CurrentUser() user: any,
   ) {
-    return this.downloadService.getMyDownloadedSkills(user.userId, pagination)
+    return this.downloadService.getMyDownloadedSkills(user.id, pagination)
   }
 
   @Get('my/records')
@@ -26,7 +26,7 @@ export class DownloadController {
     @Query('skillName') skillName?: string,
     @CurrentUser() user?: any,
   ) {
-    return this.downloadService.getMyDownloadRecords(user.userId, pagination, skillName)
+    return this.downloadService.getMyDownloadRecords(user.id, pagination, skillName)
   }
 
   @Get('stats')

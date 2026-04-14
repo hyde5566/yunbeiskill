@@ -20,13 +20,13 @@
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'status'">
-            <a-tag v-if="record.status === 'pending'" color="default">待审核</a-tag>
+            <a-tag v-if="record.status === 'pending_review'" color="default">待审核</a-tag>
             <a-tag v-else-if="record.status === 'reviewing'" color="processing">审核中</a-tag>
             <a-tag v-else-if="record.status === 'approved'" color="cyan">已入库</a-tag>
             <a-tag v-else-if="record.status === 'published'" color="success">已发布</a-tag>
             <a-tag v-else-if="record.status === 'rejected'" color="error">已驳回</a-tag>
             <a-tag v-else-if="record.status === 'draft'" color="default">草稿</a-tag>
-            <a-tag v-else-if="record.status === 'unpublished'" color="warning">已下架</a-tag>
+            <a-tag v-else-if="record.status === 'offline'" color="warning">已下架</a-tag>
           </template>
           <template v-if="column.key === 'source'">
             {{ record.source === 'internal' ? '内部自研' : '外部平台' }}
@@ -38,7 +38,7 @@
             <a-space>
               <a-button type="link" size="small" @click="$router.push(`/skill/detail/${record.id}`)">查看</a-button>
               <a-button
-                v-if="record.status === 'rejected' || record.status === 'draft'"
+                v-if="record.status === 'rejected' || record.status === 'draft' || record.status === 'pending_review' || record.status === 'approved' || record.status === 'published'"
                 type="link"
                 size="small"
                 @click="$router.push(`/skill/submit/${record.id}`)"
@@ -49,6 +49,19 @@
                 size="small"
                 @click="handleResubmit(record.id)"
               >重新提交</a-button>
+              <a-popconfirm
+                title="确定要删除该Skill吗？删除后不可恢复"
+                @confirm="handleDelete(record.id)"
+                ok-text="确定"
+                cancel-text="取消"
+              >
+                <a-button
+                  v-if="record.status !== 'published'"
+                  type="link"
+                  size="small"
+                  danger
+                >删除</a-button>
+              </a-popconfirm>
             </a-space>
           </template>
         </template>
@@ -61,7 +74,7 @@
 import { ref, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
-import { getMySkills } from '../../api/skill'
+import { getMySkills, resubmitSkill, deleteSkill } from '../../api/skill'
 
 const loading = ref(false)
 const skills = ref<any[]>([])
@@ -112,6 +125,16 @@ async function handleResubmit(id: number) {
     loadData()
   } catch {
     message.error('操作失败')
+  }
+}
+
+async function handleDelete(id: number) {
+  try {
+    await deleteSkill(id)
+    message.success('删除成功')
+    loadData()
+  } catch {
+    message.error('删除失败')
   }
 }
 

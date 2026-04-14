@@ -46,11 +46,12 @@ async function bootstrap() {
     app.useGlobalPipes(new common_1.ValidationPipe({
         whitelist: true,
         transform: true,
+        transformOptions: { enableImplicitConversion: true },
     }));
     app.useGlobalInterceptors(new response_interceptor_1.ResponseInterceptor());
     app.useGlobalFilters(new http_exception_filter_1.HttpExceptionFilter());
     app.enableCors({
-        origin: ['http://localhost:5211'],
+        origin: ['http://localhost:5211', 'http://localhost:5173'],
         credentials: true,
     });
     app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));

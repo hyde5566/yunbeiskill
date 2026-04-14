@@ -26,16 +26,22 @@ let ReviewController = class ReviewController {
         this.reviewService = reviewService;
     }
     getPendingReviews(pagination, user) {
-        return this.reviewService.getPendingReviews(pagination, user.userId);
+        const isAdmin = user.permissions?.includes('admin');
+        return this.reviewService.getPendingReviews(pagination, user.id, isAdmin);
     }
     getAllReviews(pagination, skillId) {
         return this.reviewService.getReviewHistory(pagination, skillId);
     }
+    async getReviewDetail(id) {
+        const review = await this.reviewService.findOne(id);
+        const history = await this.reviewService.getReviewsBySkillId(review.skill_id);
+        return { ...review, history };
+    }
     assignReviewer(assignDto, user) {
-        return this.reviewService.assignReviewer(assignDto, user.userId);
+        return this.reviewService.assignReviewer(assignDto, user.id);
     }
     reviewAction(id, actionDto, user) {
-        return this.reviewService.reviewAction(id, actionDto, user.userId);
+        return this.reviewService.reviewAction(id, actionDto, user.id);
     }
 };
 exports.ReviewController = ReviewController;
@@ -59,6 +65,15 @@ __decorate([
     __metadata("design:paramtypes", [pagination_dto_1.PaginationDto, Number]),
     __metadata("design:returntype", void 0)
 ], ReviewController.prototype, "getAllReviews", null);
+__decorate([
+    (0, common_1.Get)(':id'),
+    (0, public_decorator_1.RequirePermission)('review'),
+    (0, swagger_1.ApiOperation)({ summary: '获取审核详情' }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", Promise)
+], ReviewController.prototype, "getReviewDetail", null);
 __decorate([
     (0, common_1.Post)('assign'),
     (0, public_decorator_1.RequirePermission)('admin'),

@@ -48,8 +48,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SkillController = void 0;
 const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
+const typeorm_1 = require("@nestjs/typeorm");
+const typeorm_2 = require("typeorm");
 const swagger_1 = require("@nestjs/swagger");
 const skill_service_1 = require("./skill.service");
+const project_service_1 = require("../project/project.service");
+const download_service_1 = require("../download/download.service");
+const user_entity_1 = require("../user/entities/user.entity");
 const skill_dto_1 = require("./dto/skill.dto");
 const pagination_dto_1 = require("../../common/dto/pagination.dto");
 const public_decorator_1 = require("../../common/decorators/public.decorator");
@@ -58,31 +63,42 @@ const fs = __importStar(require("fs"));
 const uploadDest = process.env.UPLOAD_DEST || './uploads';
 let SkillController = class SkillController {
     skillService;
-    constructor(skillService) {
+    projectService;
+    downloadService;
+    userRepository;
+    constructor(skillService, projectService, downloadService, userRepository) {
         this.skillService = skillService;
+        this.projectService = projectService;
+        this.downloadService = downloadService;
+        this.userRepository = userRepository;
     }
-    findPublished(pagination, query, user) {
-        return this.skillService.findPublished(pagination, query, user.userId, user.permissions, []);
+    async findPublished(pagination, query, user) {
+        const userProjectIds = await this.projectService.getUserProjectIds(user.id);
+        return this.skillService.findPublished(pagination, query, user.id, user.permissions, userProjectIds);
     }
     findAll(pagination, query) {
         return this.skillService.findAll(pagination, query);
     }
     getMySubmissions(pagination, user) {
-        return this.skillService.getMySubmissions(pagination, user.userId);
+        return this.skillService.getMySubmissions(pagination, user.id);
     }
     findOne(id) {
         return this.skillService.findOne(id);
     }
     async create(createDto, zipFile, user) {
+        if (!zipFile) {
+            throw new common_1.BadRequestException('请上传Zip文件');
+        }
         const zipPath = zipFile.path;
         const zipSize = zipFile.size;
-        return this.skillService.create(createDto, user.userId, zipPath, zipSize);
+        return this.skillService.create(createDto, user.id, zipPath, zipSize);
     }
     update(id, updateDto, user) {
-        return this.skillService.update(id, updateDto, user.userId);
+        const isAdmin = user.permissions?.includes('admin');
+        return this.skillService.update(id, updateDto, user.id, isAdmin);
     }
     submitVersion(id, dto, zipFile, user) {
-        return this.skillService.submitVersion(id, dto, user.userId, zipFile.path, zipFile.size);
+        return this.skillService.submitVersion(id, dto, user.id, zipFile.path, zipFile.size);
     }
     getVersions(id) {
         return this.skillService.getVersions(id);
@@ -93,10 +109,21 @@ let SkillController = class SkillController {
     offline(id) {
         return this.skillService.offline(id);
     }
-    async downloadZip(skillId, versionId, res) {
+    resubmit(id, user) {
+        return this.skillService.resubmit(id, user.id);
+    }
+    async remove(id, user) {
+        const isAdmin = user.permissions?.includes('admin');
+        return this.skillService.remove(id, user.id, isAdmin);
+    }
+    async downloadZip(skillId, versionId, user, res) {
         const { filePath, fileName } = await this.skillService.getDownloadInfo(skillId, versionId);
         if (!fs.existsSync(filePath)) {
             throw new common_1.NotFoundException('文件不存在');
+        }
+        const dbUser = await this.userRepository.findOne({ where: { id: user.id } });
+        if (dbUser) {
+            await this.downloadService.recordDownload(user.id, skillId, versionId, dbUser.department_id);
         }
         res.download(filePath, fileName);
     }
@@ -111,7 +138,7 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [pagination_dto_1.PaginationDto,
         skill_dto_1.SkillQueryDto, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], SkillController.prototype, "findPublished", null);
 __decorate([
     (0, common_1.Get)('all'),
@@ -145,6 +172,7 @@ __decorate([
     (0, common_1.Post)(),
     (0, swagger_1.ApiOperation)({ summary: '提交新Skill' }),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('zipFile', {
+        dest: uploadDest,
         limits: { fileSize: 50 * 1024 * 1024 },
         fileFilter: (req, file, cb) => {
             if (file.originalname.endsWith('.zip')) {
@@ -164,7 +192,6 @@ __decorate([
 ], SkillController.prototype, "create", null);
 __decorate([
     (0, common_1.Put)(':id'),
-    (0, public_decorator_1.RequirePermission)('admin'),
     (0, swagger_1.ApiOperation)({ summary: '编辑Skill' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)()),
@@ -177,6 +204,7 @@ __decorate([
     (0, common_1.Post)(':id/versions'),
     (0, swagger_1.ApiOperation)({ summary: '提交新版本' }),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('zipFile', {
+        dest: uploadDest,
         limits: { fileSize: 50 * 1024 * 1024 },
         fileFilter: (req, file, cb) => {
             if (file.originalname.endsWith('.zip')) {
@@ -222,19 +250,42 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], SkillController.prototype, "offline", null);
 __decorate([
+    (0, common_1.Post)(':id/resubmit'),
+    (0, swagger_1.ApiOperation)({ summary: '重新提交审核' }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", void 0)
+], SkillController.prototype, "resubmit", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: '删除Skill' }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], SkillController.prototype, "remove", null);
+__decorate([
     (0, common_1.Get)(':skillId/versions/:versionId/download'),
     (0, swagger_1.ApiOperation)({ summary: '下载Skill Zip包' }),
     __param(0, (0, common_1.Param)('skillId', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Param)('versionId', common_1.ParseIntPipe)),
-    __param(2, (0, common_1.Res)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
+    __param(3, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Number, Object]),
+    __metadata("design:paramtypes", [Number, Number, Object, Object]),
     __metadata("design:returntype", Promise)
 ], SkillController.prototype, "downloadZip", null);
 exports.SkillController = SkillController = __decorate([
     (0, swagger_1.ApiTags)('Skill管理'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.Controller)('skills'),
-    __metadata("design:paramtypes", [skill_service_1.SkillService])
+    __param(3, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
+    __metadata("design:paramtypes", [skill_service_1.SkillService,
+        project_service_1.ProjectService,
+        download_service_1.DownloadService,
+        typeorm_2.Repository])
 ], SkillController);
 //# sourceMappingURL=skill.controller.js.map

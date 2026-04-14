@@ -31,7 +31,7 @@ let PermissionController = class PermissionController {
         return this.permissionService.getUserPermissions(userId);
     }
     assignPermissions(assignDto, user) {
-        return this.permissionService.assignPermissions(assignDto, user.userId);
+        return this.permissionService.assignPermissions(assignDto, user.id);
     }
 };
 exports.PermissionController = PermissionController;

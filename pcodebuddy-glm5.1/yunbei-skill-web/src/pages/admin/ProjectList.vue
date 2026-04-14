@@ -9,11 +9,14 @@
 
       <a-table :dataSource="projects" :columns="columns" :loading="loading" :pagination="pagination" row-key="id" @change="handleTableChange">
         <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'status'">
-            <a-tag :color="record.status === 1 ? 'success' : 'default'">{{ record.status === 1 ? '进行中' : '已结束' }}</a-tag>
+          <template v-if="column.key === 'ownerName'">
+            {{ record.owner?.real_name || '-' }}
           </template>
-          <template v-if="column.key === 'createdAt'">
-            {{ formatDate(record.createdAt) }}
+          <template v-if="column.key === 'status'">
+            <a-tag :color="record.status === 'active' ? 'success' : 'default'">{{ record.status === 'active' ? '进行中' : '已结束' }}</a-tag>
+          </template>
+          <template v-if="column.key === 'created_at'">
+            {{ formatDate(record.created_at) }}
           </template>
           <template v-if="column.key === 'action'">
             <a-space>
@@ -37,14 +40,14 @@
           <a-textarea v-model:value="form.description" :rows="3" />
         </a-form-item>
         <a-form-item label="项目负责人">
-          <a-select v-model:value="form.managerId" placeholder="请选择" allow-clear show-search :filter-option="filterOption" style="width: 100%">
+          <a-select v-model:value="form.owner_id" placeholder="请选择" allow-clear show-search :filter-option="filterOption" style="width: 100%">
             <a-select-option v-for="u in userOptions" :key="u.value" :value="u.value">{{ u.label }}</a-select-option>
           </a-select>
         </a-form-item>
         <a-form-item label="状态">
           <a-radio-group v-model:value="form.status">
-            <a-radio :value="1">进行中</a-radio>
-            <a-radio :value="0">已结束</a-radio>
+            <a-radio value="active">进行中</a-radio>
+            <a-radio value="archived">已结束</a-radio>
           </a-radio-group>
         </a-form-item>
       </a-form>
@@ -69,16 +72,16 @@ const userOptions = ref<any[]>([])
 const form = ref({
   name: '',
   description: '',
-  managerId: undefined as number | undefined,
-  status: 1,
+  owner_id: undefined as number | undefined,
+  status: 'active',
 })
 
 const columns = [
   { title: '项目名称', dataIndex: 'name', key: 'name' },
   { title: '描述', dataIndex: 'description', key: 'description', ellipsis: true },
-  { title: '负责人', dataIndex: 'managerName', key: 'managerName', width: 100 },
+  { title: '负责人', key: 'ownerName', width: 100 },
   { title: '状态', key: 'status', width: 80 },
-  { title: '创建时间', key: 'createdAt', width: 160 },
+  { title: '创建时间', key: 'created_at', width: 160 },
   { title: '操作', key: 'action', width: 180 },
 ]
 
@@ -108,7 +111,7 @@ async function loadData() {
 async function loadUsers() {
   try {
     const res = await getUsers({ page: 1, pageSize: 100 })
-    userOptions.value = (res.data?.list || []).map((u: any) => ({ label: `${u.name} (${u.username})`, value: u.id }))
+    userOptions.value = (res.data?.list || []).map((u: any) => ({ label: `${u.real_name} (${u.username})`, value: u.id }))
   } catch { /* ignore */ }
 }
 
@@ -125,9 +128,9 @@ function filterOption(input: string, option: any) {
 function showModal(project?: any) {
   editingProject.value = project || null
   if (project) {
-    form.value = { name: project.name, description: project.description || '', managerId: project.managerId, status: project.status }
+    form.value = { name: project.name, description: project.description || '', owner_id: project.owner_id, status: project.status }
   } else {
-    form.value = { name: '', description: '', managerId: undefined, status: 1 }
+    form.value = { name: '', description: '', owner_id: undefined, status: 'active' }
   }
   modalVisible.value = true
 }

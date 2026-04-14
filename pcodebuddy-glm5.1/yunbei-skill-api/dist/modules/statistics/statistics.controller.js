@@ -16,6 +16,7 @@ exports.StatisticsController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const statistics_service_1 = require("./statistics.service");
+const public_decorator_1 = require("../../common/decorators/public.decorator");
 let StatisticsController = class StatisticsController {
     statisticsService;
     constructor(statisticsService) {
@@ -155,6 +156,7 @@ __decorate([
 exports.StatisticsController = StatisticsController = __decorate([
     (0, swagger_1.ApiTags)('统计管理'),
     (0, common_1.Controller)('statistics'),
+    (0, public_decorator_1.RequirePermission)('admin'),
     __metadata("design:paramtypes", [statistics_service_1.StatisticsService])
 ], StatisticsController);
 //# sourceMappingURL=statistics.controller.js.map

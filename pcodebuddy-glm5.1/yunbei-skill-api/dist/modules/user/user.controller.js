@@ -29,7 +29,7 @@ let UserController = class UserController {
         return this.userService.findAll(pagination, keyword);
     }
     getProfile(user) {
-        return this.userService.getUserWithPermissions(user.userId);
+        return this.userService.getUserWithPermissions(user.id);
     }
     findOne(id) {
         return this.userService.getUserWithPermissions(id);

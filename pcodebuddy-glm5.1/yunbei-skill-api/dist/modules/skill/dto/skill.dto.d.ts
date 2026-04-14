@@ -11,7 +11,7 @@ export declare class CreateSkillDto {
     visibility_type: string;
     visibility_account_ids?: number[];
     version_number: string;
-    change_log: string;
+    change_log?: string;
 }
 export declare class UpdateSkillDto {
     name?: string;
@@ -28,7 +28,7 @@ export declare class UpdateSkillDto {
 }
 export declare class SubmitVersionDto {
     version_number: string;
-    change_log: string;
+    change_log?: string;
 }
 export declare class SkillQueryDto {
     keyword?: string;

@@ -3,10 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
 import * as path from 'path'
+import * as fs from 'fs'
 import { Skill } from './entities/skill.entity'
 import { SkillVersion } from './entities/skill-version.entity'
 import { SkillVisibility } from './entities/skill-visibility.entity'
 import { ProjectSkill } from '../project/entities/project-skill.entity'
+import { Review } from '../review/entities/review.entity'
 import { CreateSkillDto, UpdateSkillDto, SubmitVersionDto, SkillQueryDto } from './dto/skill.dto'
 import { PaginatedResult, PaginationDto } from '../../common/dto/pagination.dto'
 
@@ -21,6 +23,8 @@ export class SkillService {
     private skillVisibilityRepository: Repository<SkillVisibility>,
     @InjectRepository(ProjectSkill)
     private projectSkillRepository: Repository<ProjectSkill>,
+    @InjectRepository(Review)
+    private reviewRepository: Repository<Review>,
   ) {}
 
   // 创建Skill
@@ -59,6 +63,15 @@ export class SkillService {
       status: 'pending_review',
     })
     await this.skillVersionRepository.save(version)
+
+    // 自动创建审核记录（待分配审核员）
+    const review = this.reviewRepository.create({
+      skill_id: savedSkill.id,
+      version_id: version.id,
+      reviewer_id: null,
+      status: 'pending',
+    })
+    await this.reviewRepository.save(review)
 
     // 设置可见范围
     await this.setVisibility(savedSkill.id, createDto)
@@ -117,7 +130,7 @@ export class SkillService {
       .leftJoinAndSelect('skill.category', 'category')
       .leftJoinAndSelect('skill.submitter', 'submitter')
       .leftJoinAndSelect('skill.versions', 'version')
-      .where('skill.status = :status', { status: 'published' })
+      .where('skill.status IN (:...statuses)', { statuses: ['published', 'approved'] })
 
     // 可见范围过滤（admin可看全部）
     if (!userPermissions.includes('admin')) {
@@ -196,21 +209,62 @@ export class SkillService {
   }
 
   async findOne(id: number): Promise<Skill> {
-    const skill = await this.skillRepository.findOne({
-      where: { id },
-      relations: ['category', 'submitter', 'versions', 'visibilityList'],
-    })
+    const skill = await this.skillRepository
+      .createQueryBuilder('skill')
+      .leftJoinAndSelect('skill.category', 'category')
+      .leftJoinAndSelect('skill.submitter', 'submitter')
+      .leftJoinAndSelect('skill.versions', 'version')
+      .leftJoinAndSelect('skill.visibilityList', 'visibility')
+      .where('skill.id = :id', { id })
+      .getOne()
     if (!skill) {
       throw new NotFoundException('Skill不存在')
     }
+
+    // 获取评分统计
+    const ratingResult = await this.skillRepository.manager.query(
+      'SELECT COALESCE(AVG(score), 0) as avg_rating, COUNT(*) as rating_count FROM ratings WHERE skill_id = ?',
+      [id],
+    )
+    ;(skill as any).avg_rating = parseFloat(ratingResult[0]?.avg_rating || 0)
+    ;(skill as any).rating_count = parseInt(ratingResult[0]?.rating_count || 0)
+
+    // 获取下载次数
+    const downloadResult = await this.skillRepository.manager.query(
+      'SELECT COUNT(*) as download_count FROM download_records WHERE skill_id = ?',
+      [id],
+    )
+    ;(skill as any).download_count = parseInt(downloadResult[0]?.download_count || 0)
+
+    // 获取反馈列表
+    const feedbacks = await this.skillRepository.manager.query(
+      'SELECT f.*, u.real_name as user_real_name, u.username as user_username FROM feedbacks f LEFT JOIN users u ON f.user_id = u.id WHERE f.skill_id = ? ORDER BY f.created_at DESC',
+      [id],
+    )
+    ;(skill as any).feedbacks = feedbacks.map((f: any) => ({
+      ...f,
+      user: { real_name: f.user_real_name, username: f.user_username },
+    }))
+
+    // 获取关联项目
+    const projects = await this.skillRepository.manager.query(
+      'SELECT p.* FROM projects p INNER JOIN project_skills ps ON p.id = ps.project_id WHERE ps.skill_id = ?',
+      [id],
+    )
+    ;(skill as any).projects = projects
+
     return skill
   }
 
   // 更新Skill
-  async update(id: number, updateDto: UpdateSkillDto, userId: number) {
+  async update(id: number, updateDto: UpdateSkillDto, userId: number, isAdmin: boolean) {
     const skill = await this.findOne(id)
 
-    // 只有管理员可编辑
+    // 权限校验：管理员或提交人可编辑
+    if (!isAdmin && Number(skill.submitter_id) !== Number(userId)) {
+      throw new ForbiddenException('只能编辑自己提交的Skill')
+    }
+
     Object.assign(skill, updateDto)
 
     // 如果修改了可见范围
@@ -242,6 +296,15 @@ export class SkillService {
       status: 'pending_review',
     })
     await this.skillVersionRepository.save(version)
+
+    // 自动创建审核记录（待分配审核员）
+    const review = this.reviewRepository.create({
+      skill_id: skillId,
+      version_id: version.id,
+      reviewer_id: null,
+      status: 'pending',
+    })
+    await this.reviewRepository.save(review)
 
     // skill状态回退到待审核
     skill.status = 'pending_review'
@@ -305,6 +368,71 @@ export class SkillService {
     const skill = await this.findOne(id)
     skill.status = 'offline'
     return this.skillRepository.save(skill)
+  }
+
+  // 重新提交审核
+  async resubmit(id: number, submitterId: number) {
+    const skill = await this.findOne(id)
+    if (Number(skill.submitter_id) !== Number(submitterId)) {
+      throw new ForbiddenException('只能重新提交自己的Skill')
+    }
+    if (skill.status !== 'rejected' && skill.status !== 'draft' && skill.status !== 'approved' && skill.status !== 'published') {
+      throw new BadRequestException('只有已驳回、草稿、已入库或已发布状态的Skill可以重新提交')
+    }
+    skill.status = 'pending_review'
+    await this.skillRepository.save(skill)
+
+    // 获取最新版本并创建新的审核记录
+    const latestVersion = await this.skillVersionRepository.findOne({
+      where: { skill_id: id },
+      order: { created_at: 'DESC' },
+    })
+    if (latestVersion) {
+      const review = this.reviewRepository.create({
+        skill_id: id,
+        version_id: latestVersion.id,
+        reviewer_id: null,
+        status: 'pending',
+      })
+      await this.reviewRepository.save(review)
+    }
+
+    return skill
+  }
+
+  // 删除Skill
+  async remove(id: number, userId: number, isAdmin: boolean) {
+    const skill = await this.findOne(id)
+
+    // 权限校验：管理员可删任何，普通用户只能删自己提交的且未发布的
+    if (!isAdmin) {
+      if (Number(skill.submitter_id) !== Number(userId)) {
+        throw new ForbiddenException('只能删除自己提交的Skill')
+      }
+      if (skill.status === 'published') {
+        throw new BadRequestException('已发布的Skill不能删除，请先下架')
+      }
+    }
+
+    // 删除磁盘上的zip文件
+    const versions = await this.skillVersionRepository.find({ where: { skill_id: id } })
+    for (const v of versions) {
+      try {
+        const filePath = path.resolve(v.zip_path)
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath)
+        }
+      } catch { /* ignore file delete errors */ }
+    }
+
+    // 删除关联数据（顺序：reviews -> visibility -> project_skill -> versions -> skill）
+    await this.reviewRepository.delete({ skill_id: id })
+    await this.skillVisibilityRepository.delete({ skill_id: id })
+    await this.projectSkillRepository.delete({ skill_id: id })
+    await this.skillVersionRepository.delete({ skill_id: id })
+    await this.skillRepository.delete(id)
+
+    return { message: '删除成功' }
   }
 
   // 获取下载信息

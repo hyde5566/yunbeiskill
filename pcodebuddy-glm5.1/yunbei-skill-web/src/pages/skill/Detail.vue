@@ -7,35 +7,37 @@
           <a-col :span="18">
             <div class="header-top">
               <h2 class="skill-title">{{ skill.name }}</h2>
-              <a-tag :color="skill.source === 'internal' ? 'blue' : 'green'" size="large">
-                {{ skill.source === 'internal' ? '内部自研' : '外部平台' }}
+              <a-tag :color="skill.source_type === 'internal' ? 'blue' : 'green'" size="large">
+                {{ skill.source_type === 'internal' ? '内部自研' : '外部平台' }}
               </a-tag>
               <a-tag v-if="skill.status === 'published'" color="success">已发布</a-tag>
               <a-tag v-else-if="skill.status === 'reviewing'" color="processing">审核中</a-tag>
               <a-tag v-else-if="skill.status === 'approved'" color="cyan">已入库</a-tag>
               <a-tag v-else-if="skill.status === 'rejected'" color="error">已驳回</a-tag>
-              <a-tag v-else color="default">待审核</a-tag>
+              <a-tag v-else-if="skill.status === 'pending_review'" color="default">待审核</a-tag>
+              <a-tag v-else-if="skill.status === 'offline'" color="warning">已下架</a-tag>
+              <a-tag v-else color="default">未知</a-tag>
             </div>
             <p class="skill-summary">{{ skill.summary || '暂无简介' }}</p>
             <div class="skill-meta">
               <span class="meta-item"><UserOutlined /> {{ skill.author || '未知' }}</span>
-              <span class="meta-item"><ApartmentOutlined /> {{ skill.departmentName || '-' }}</span>
-              <span class="meta-item"><TagOutlined /> {{ skill.categoryName }}</span>
-              <span class="meta-item" v-if="skill.sourceUrlName">
-                <LinkOutlined /> <a :href="skill.sourceUrl" target="_blank">{{ skill.sourceUrlName }}</a>
+              <span class="meta-item"><ApartmentOutlined /> {{ skill.submitter?.department?.name || '-' }}</span>
+              <span class="meta-item"><TagOutlined /> {{ skill.category?.name || '-' }}</span>
+              <span class="meta-item" v-if="skill.source_url_name">
+                <LinkOutlined /> <a :href="skill.source_url" target="_blank">{{ skill.source_url_name }}</a>
               </span>
             </div>
           </a-col>
           <a-col :span="6" class="header-right-col">
             <div class="rating-box">
-              <div class="rating-score">{{ skill.avgRating?.toFixed(1) || '-' }}</div>
-              <a-rate :value="skill.avgRating" disabled allow-half :count="5" />
-              <div class="rating-count">{{ skill.ratingCount || 0 }} 人评分</div>
+              <div class="rating-score">{{ skill.avg_rating?.toFixed(1) || '-' }}</div>
+              <a-rate :value="skill.avg_rating" disabled allow-half :count="5" />
+              <div class="rating-count">{{ skill.rating_count || 0 }} 人评分</div>
             </div>
             <div class="download-box">
               <a-select v-model:value="selectedVersion" style="width: 100%; margin-bottom: 12px" placeholder="选择版本">
                 <a-select-option v-for="v in versions" :key="v.id" :value="v.id">
-                  v{{ v.version }}
+                  v{{ v.version_number }}
                 </a-select-option>
               </a-select>
               <a-button type="primary" size="large" block :disabled="!selectedVersion" @click="handleDownload">
@@ -50,7 +52,7 @@
       <a-card v-if="skill" :bordered="false" class="detail-content" style="margin-top: 16px">
         <a-tabs v-model:activeKey="activeTab">
           <a-tab-pane key="detail" tab="详细说明">
-            <div class="detail-text" v-if="skill.detail" v-html="skill.detail" />
+            <div class="detail-text" v-if="skill.detail" v-html="sanitizeHtml(skill.detail)" />
             <p v-else style="color: #8c8c8c">暂无详细说明</p>
           </a-tab-pane>
 
@@ -58,10 +60,10 @@
             <a-table :dataSource="versions" :columns="versionColumns" :pagination="false" row-key="id" size="middle">
               <template #bodyCell="{ column, record }">
                 <template v-if="column.key === 'version'">
-                  <a-tag color="blue">v{{ record.version }}</a-tag>
+                  <a-tag color="blue">v{{ record.version_number }}</a-tag>
                 </template>
                 <template v-if="column.key === 'createdAt'">
-                  {{ formatDate(record.createdAt) }}
+                  {{ formatDate(record.created_at) }}
                 </template>
                 <template v-if="column.key === 'action'">
                   <a-button type="link" size="small" @click="downloadVersion(record)">下载</a-button>
@@ -96,13 +98,13 @@
                 <a-list-item>
                   <a-list-item-meta>
                     <template #title>
-                      <span>{{ item.userName }}</span>
+                      <span>{{ item.user?.real_name || item.user?.username || '-' }}</span>
                       <a-rate :value="item.rating" disabled :count="5" style="margin-left: 8px; font-size: 12px" />
-                      <a-tag v-if="item.isInvalid" color="red" style="margin-left: 8px">无效反馈</a-tag>
+                      <a-tag v-if="item.is_invalid" color="red" style="margin-left: 8px">无效反馈</a-tag>
                     </template>
                     <template #description>
                       <div>{{ item.content }}</div>
-                      <div style="color: #8c8c8c; font-size: 12px; margin-top: 4px">{{ formatDate(item.createdAt) }}</div>
+                      <div style="color: #8c8c8c; font-size: 12px; margin-top: 4px">{{ formatDate(item.created_at) }}</div>
                     </template>
                   </a-list-item-meta>
                 </a-list-item>
@@ -113,6 +115,9 @@
           <a-tab-pane key="projects" tab="关联项目">
             <a-table :dataSource="relatedProjects" :columns="projectColumns" :pagination="false" row-key="id" size="middle">
               <template #bodyCell="{ column, record }">
+                <template v-if="column.key === 'ownerName'">
+                  {{ record.owner?.real_name || '-' }}
+                </template>
                 <template v-if="column.key === 'action'">
                   <a-button type="link" size="small" @click="$router.push(`/admin/projects/${record.id}/members`)">查看</a-button>
                 </template>
@@ -135,6 +140,7 @@ import {
 import { getSkillDetail, downloadSkill } from '../../api/skill'
 import { submitRating as submitRatingApi, getSkillRatings } from '../../api/rating'
 import { submitFeedback as submitFeedbackApi, getSkillFeedbacks } from '../../api/feedback'
+import { sanitizeHtml } from '../../utils/sanitize'
 
 const route = useRoute()
 const skillId = Number(route.params.id)
@@ -149,15 +155,15 @@ const myRating = ref(0)
 const myFeedback = ref('')
 
 const versionColumns = [
-  { title: '版本号', key: 'version', dataIndex: 'version' },
-  { title: '更新说明', key: 'changeLog', dataIndex: 'changeLog' },
+  { title: '版本号', key: 'version', dataIndex: 'version_number' },
+  { title: '更新说明', key: 'changeLog', dataIndex: 'change_log' },
   { title: '提交时间', key: 'createdAt' },
   { title: '操作', key: 'action', width: 80 },
 ]
 
 const projectColumns = [
   { title: '项目名称', key: 'name', dataIndex: 'name' },
-  { title: '项目负责人', key: 'managerName', dataIndex: 'managerName' },
+  { title: '项目负责人', key: 'ownerName' },
   { title: '操作', key: 'action', width: 80 },
 ]
 
@@ -205,7 +211,7 @@ async function downloadVersion(record: any) {
 async function submitRating() {
   if (!myRating.value) return
   try {
-    await submitRatingApi({ skillId, versionId: selectedVersion.value, score: myRating.value })
+    await submitRatingApi({ skill_id: skillId, version_id: selectedVersion.value, score: myRating.value })
     message.success('评分成功')
     myRating.value = 0
     loadDetail()
@@ -217,7 +223,7 @@ async function submitRating() {
 async function submitFeedback() {
   if (!myFeedback.value.trim()) return
   try {
-    await submitFeedbackApi({ skillId, content: myFeedback.value })
+    await submitFeedbackApi({ skill_id: skillId, content: myFeedback.value })
     message.success('反馈提交成功')
     myFeedback.value = ''
     loadDetail()

@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ReviewActionDto = exports.AssignReviewerDto = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
+const class_transformer_1 = require("class-transformer");
 class AssignReviewerDto {
     skill_id;
     version_id;
@@ -21,18 +22,24 @@ exports.AssignReviewerDto = AssignReviewerDto;
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'SkillID' }),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_transformer_1.Transform)(({ value }) => { if (value === null || value === undefined || value === '')
+        return undefined; return typeof value === 'string' ? parseInt(value, 10) : value; }),
     (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
 ], AssignReviewerDto.prototype, "skill_id", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ description: '版本ID' }),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_transformer_1.Transform)(({ value }) => { if (value === null || value === undefined || value === '')
+        return undefined; return typeof value === 'string' ? parseInt(value, 10) : value; }),
     (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
 ], AssignReviewerDto.prototype, "version_id", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ description: '审核员ID' }),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_transformer_1.Transform)(({ value }) => { if (value === null || value === undefined || value === '')
+        return undefined; return typeof value === 'string' ? parseInt(value, 10) : value; }),
     (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
 ], AssignReviewerDto.prototype, "reviewer_id", void 0);

@@ -147,7 +147,7 @@ async function handleAddMember() {
   if (selectedUserIds.value.length === 0) { message.warning('请选择用户'); return }
   addingMember.value = true
   try {
-    await addProjectMembers(projectId, { userIds: selectedUserIds.value })
+    await addProjectMembers(projectId, { user_ids: selectedUserIds.value })
     message.success('添加成功')
     memberModalVisible.value = false
     loadMembers()
@@ -167,7 +167,7 @@ async function handleAddSkill() {
   if (selectedSkillIds.value.length === 0) { message.warning('请选择Skill'); return }
   addingSkill.value = true
   try {
-    await addProjectSkills(projectId, { skillIds: selectedSkillIds.value })
+    await addProjectSkills(projectId, { skill_ids: selectedSkillIds.value })
     message.success('关联成功')
     skillModalVisible.value = false
     loadSkills()

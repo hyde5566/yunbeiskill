@@ -6,6 +6,7 @@ import { RequirePermission } from '../../common/decorators/public.decorator'
 
 @ApiTags('统计管理')
 @Controller('statistics')
+@RequirePermission('admin')
 export class StatisticsController {
   constructor(private readonly statisticsService: StatisticsService) {}
 

@@ -1,5 +1,6 @@
 import { IsNotEmpty, IsString, IsOptional, IsInt, IsArray } from 'class-validator'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { Transform } from 'class-transformer'
 
 export class CreateProjectDto {
   @ApiProperty({ description: '项目名称' })
@@ -14,6 +15,7 @@ export class CreateProjectDto {
 
   @ApiProperty({ description: '项目负责人ID' })
   @IsNotEmpty({ message: '项目负责人不能为空' })
+  @Transform(({ value }) => { if (value === null || value === undefined || value === '') return undefined; return typeof value === 'string' ? parseInt(value, 10) : value })
   @IsInt()
   owner_id: number
 }
@@ -31,6 +33,7 @@ export class UpdateProjectDto {
 
   @ApiPropertyOptional({ description: '项目负责人ID' })
   @IsOptional()
+  @Transform(({ value }) => { if (value === null || value === undefined || value === '') return undefined; return typeof value === 'string' ? parseInt(value, 10) : value })
   @IsInt()
   owner_id?: number
 

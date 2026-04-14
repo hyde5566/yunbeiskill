@@ -15,30 +15,30 @@ export class NotificationController {
     @Query() pagination: PaginationDto,
     @CurrentUser() user: any,
   ) {
-    return this.notificationService.getMyNotifications(user.userId, pagination)
+    return this.notificationService.getMyNotifications(user.id, pagination)
   }
 
   @Get('unread-count')
   @ApiOperation({ summary: '获取未读通知数量' })
   getUnreadCount(@CurrentUser() user: any) {
-    return this.notificationService.getUnreadCount(user.userId)
+    return this.notificationService.getUnreadCount(user.id)
   }
 
   @Put(':id/read')
   @ApiOperation({ summary: '标记通知已读' })
   markAsRead(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
-    return this.notificationService.markAsRead(id, user.userId)
+    return this.notificationService.markAsRead(id, user.id)
   }
 
   @Put('read-all')
   @ApiOperation({ summary: '全部标记已读' })
   markAllAsRead(@CurrentUser() user: any) {
-    return this.notificationService.markAllAsRead(user.userId)
+    return this.notificationService.markAllAsRead(user.id)
   }
 
   @Delete(':id')
   @ApiOperation({ summary: '删除通知' })
   remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
-    return this.notificationService.remove(id, user.userId)
+    return this.notificationService.remove(id, user.id)
   }
 }

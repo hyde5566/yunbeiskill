@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AssignPermissionsDto = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
+const class_transformer_1 = require("class-transformer");
 class AssignPermissionsDto {
     user_id;
     permission_codes;
@@ -20,6 +21,8 @@ exports.AssignPermissionsDto = AssignPermissionsDto;
 __decorate([
     (0, swagger_1.ApiProperty)({ description: '用户ID' }),
     (0, class_validator_1.IsNotEmpty)({ message: '用户ID不能为空' }),
+    (0, class_transformer_1.Transform)(({ value }) => { if (value === null || value === undefined || value === '')
+        return undefined; return typeof value === 'string' ? parseInt(value, 10) : value; }),
     (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
 ], AssignPermissionsDto.prototype, "user_id", void 0);

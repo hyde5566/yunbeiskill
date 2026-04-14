@@ -49,7 +49,7 @@ __decorate([
 ], User.prototype, "real_name", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ description: '所属部门ID' }),
-    (0, typeorm_1.Column)({ type: 'bigint' }),
+    (0, typeorm_1.Column)({ type: 'bigint', nullable: true }),
     __metadata("design:type", Number)
 ], User.prototype, "department_id", void 0);
 __decorate([

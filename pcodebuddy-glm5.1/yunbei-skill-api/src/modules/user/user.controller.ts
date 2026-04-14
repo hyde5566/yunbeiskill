@@ -24,7 +24,7 @@ export class UserController {
   @Get('profile/me')
   @ApiOperation({ summary: '获取当前用户信息' })
   getProfile(@CurrentUser() user: any) {
-    return this.userService.getUserWithPermissions(user.userId)
+    return this.userService.getUserWithPermissions(user.id)
   }
 
   @Get(':id')

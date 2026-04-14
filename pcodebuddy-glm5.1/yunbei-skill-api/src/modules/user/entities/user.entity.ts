@@ -28,7 +28,7 @@ export class User {
   real_name: string
 
   @ApiProperty({ description: '所属部门ID' })
-  @Column({ type: 'bigint' })
+  @Column({ type: 'bigint', nullable: true })
   department_id: number
 
   @ApiProperty({ description: '邮箱' })

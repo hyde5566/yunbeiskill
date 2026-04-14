@@ -5,18 +5,18 @@
         <!-- Skill 信息 -->
         <a-card :bordered="false" class="info-card" title="Skill信息">
           <a-descriptions :column="2" bordered size="middle">
-            <a-descriptions-item label="名称">{{ review.skillName }}</a-descriptions-item>
-            <a-descriptions-item label="作者">{{ review.skillAuthor }}</a-descriptions-item>
-            <a-descriptions-item label="分类">{{ review.categoryName }}</a-descriptions-item>
-            <a-descriptions-item label="来源">{{ review.skillSource === 'internal' ? '内部自研' : '外部平台' }}</a-descriptions-item>
-            <a-descriptions-item label="简介" :span="2">{{ review.skillSummary }}</a-descriptions-item>
+            <a-descriptions-item label="名称">{{ review.skill?.name || '-' }}</a-descriptions-item>
+            <a-descriptions-item label="作者">{{ review.skill?.author || '-' }}</a-descriptions-item>
+            <a-descriptions-item label="分类">{{ review.skill?.category?.name || '-' }}</a-descriptions-item>
+            <a-descriptions-item label="来源">{{ review.skill?.source_type === 'internal' ? '内部自研' : '外部平台' }}</a-descriptions-item>
+            <a-descriptions-item label="简介" :span="2">{{ review.skill?.summary || '-' }}</a-descriptions-item>
             <a-descriptions-item label="详细说明" :span="2">
-              <div v-html="review.skillDetail || '无'"></div>
+              <div v-html="review.skill?.detail || '无'"></div>
             </a-descriptions-item>
-            <a-descriptions-item label="版本号">{{ review.version }}</a-descriptions-item>
-            <a-descriptions-item label="提交人">{{ review.submitterName }}</a-descriptions-item>
-            <a-descriptions-item label="提交时间">{{ formatDate(review.createdAt) }}</a-descriptions-item>
-            <a-descriptions-item label="更新说明">{{ review.changeLog || '无' }}</a-descriptions-item>
+            <a-descriptions-item label="版本号">{{ review.version?.version_number || '-' }}</a-descriptions-item>
+            <a-descriptions-item label="提交人">{{ review.skill?.submitter?.real_name || '-' }}</a-descriptions-item>
+            <a-descriptions-item label="提交时间">{{ formatDate(review.created_at) }}</a-descriptions-item>
+            <a-descriptions-item label="更新说明">{{ review.version?.change_log || '无' }}</a-descriptions-item>
           </a-descriptions>
         </a-card>
 
@@ -51,9 +51,9 @@
             <a-timeline-item v-for="item in reviewHistory" :key="item.id" :color="getStatusColor(item.status)">
               <div class="timeline-item">
                 <div class="timeline-header">
-                  <span class="reviewer">{{ item.reviewerName }}</span>
+                  <span class="reviewer">{{ item.reviewer?.real_name || '待分配' }}</span>
                   <a-tag :color="getStatusColor(item.status)" size="small">{{ getStatusText(item.status) }}</a-tag>
-                  <span class="time">{{ formatDate(item.createdAt) }}</span>
+                  <span class="time">{{ formatDate(item.created_at) }}</span>
                 </div>
                 <div v-if="item.comment" class="timeline-comment">{{ item.comment }}</div>
               </div>
@@ -72,6 +72,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons-vue'
 import { getReviewDetail, approveReview, rejectReview } from '../../api/review'
+import { sanitizeHtml } from '../../utils/sanitize'
 
 const route = useRoute()
 const router = useRouter()

@@ -15,12 +15,20 @@ const skill_entity_1 = require("./entities/skill.entity");
 const skill_version_entity_1 = require("./entities/skill-version.entity");
 const skill_visibility_entity_1 = require("./entities/skill-visibility.entity");
 const project_skill_entity_1 = require("../project/entities/project-skill.entity");
+const project_module_1 = require("../project/project.module");
+const download_module_1 = require("../download/download.module");
+const user_entity_1 = require("../user/entities/user.entity");
+const review_entity_1 = require("../review/entities/review.entity");
 let SkillModule = class SkillModule {
 };
 exports.SkillModule = SkillModule;
 exports.SkillModule = SkillModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([skill_entity_1.Skill, skill_version_entity_1.SkillVersion, skill_visibility_entity_1.SkillVisibility, project_skill_entity_1.ProjectSkill])],
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([skill_entity_1.Skill, skill_version_entity_1.SkillVersion, skill_visibility_entity_1.SkillVisibility, project_skill_entity_1.ProjectSkill, user_entity_1.User, review_entity_1.Review]),
+            project_module_1.ProjectModule,
+            download_module_1.DownloadModule,
+        ],
         controllers: [skill_controller_1.SkillController],
         providers: [skill_service_1.SkillService],
         exports: [skill_service_1.SkillService],

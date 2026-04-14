@@ -25,10 +25,10 @@ let DownloadController = class DownloadController {
         this.downloadService = downloadService;
     }
     getMyDownloadedSkills(pagination, user) {
-        return this.downloadService.getMyDownloadedSkills(user.userId, pagination);
+        return this.downloadService.getMyDownloadedSkills(user.id, pagination);
     }
     getMyDownloadRecords(pagination, skillName, user) {
-        return this.downloadService.getMyDownloadRecords(user.userId, pagination, skillName);
+        return this.downloadService.getMyDownloadRecords(user.id, pagination, skillName);
     }
     getGlobalStats() {
         return this.downloadService.getGlobalStats();

@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateRatingDto = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
+const class_transformer_1 = require("class-transformer");
 class CreateRatingDto {
     skill_id;
     version_id;
@@ -21,18 +22,24 @@ exports.CreateRatingDto = CreateRatingDto;
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'SkillID' }),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_transformer_1.Transform)(({ value }) => { if (value === null || value === undefined || value === '')
+        return undefined; return typeof value === 'string' ? parseInt(value, 10) : value; }),
     (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
 ], CreateRatingDto.prototype, "skill_id", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ description: '版本ID' }),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_transformer_1.Transform)(({ value }) => { if (value === null || value === undefined || value === '')
+        return undefined; return typeof value === 'string' ? parseInt(value, 10) : value; }),
     (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
 ], CreateRatingDto.prototype, "version_id", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ description: '评分（1-5）' }),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_transformer_1.Transform)(({ value }) => { if (value === null || value === undefined || value === '')
+        return undefined; return typeof value === 'string' ? parseInt(value, 10) : value; }),
     (0, class_validator_1.IsInt)(),
     (0, class_validator_1.Min)(1),
     (0, class_validator_1.Max)(5),

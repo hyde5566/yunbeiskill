@@ -18,7 +18,8 @@ export class ReviewController {
     @Query() pagination: PaginationDto,
     @CurrentUser() user: any,
   ) {
-    return this.reviewService.getPendingReviews(pagination, user.userId)
+    const isAdmin = user.permissions?.includes('admin')
+    return this.reviewService.getPendingReviews(pagination, user.id, isAdmin)
   }
 
   @Get('all')
@@ -31,6 +32,15 @@ export class ReviewController {
     return this.reviewService.getReviewHistory(pagination, skillId)
   }
 
+  @Get(':id')
+  @RequirePermission('review')
+  @ApiOperation({ summary: '获取审核详情' })
+  async getReviewDetail(@Param('id', ParseIntPipe) id: number) {
+    const review = await this.reviewService.findOne(id)
+    const history = await this.reviewService.getReviewsBySkillId(review.skill_id)
+    return { ...review, history }
+  }
+
   @Post('assign')
   @RequirePermission('admin')
   @ApiOperation({ summary: '分配审核员' })
@@ -38,7 +48,7 @@ export class ReviewController {
     @Body() assignDto: AssignReviewerDto,
     @CurrentUser() user: any,
   ) {
-    return this.reviewService.assignReviewer(assignDto, user.userId)
+    return this.reviewService.assignReviewer(assignDto, user.id)
   }
 
   @Post(':id/action')
@@ -49,6 +59,6 @@ export class ReviewController {
     @Body() actionDto: ReviewActionDto,
     @CurrentUser() user: any,
   ) {
-    return this.reviewService.reviewAction(id, actionDto, user.userId)
+    return this.reviewService.reviewAction(id, actionDto, user.id)
   }
 }

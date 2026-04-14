@@ -11,6 +11,7 @@ export class PermissionController {
   constructor(private permService: PermissionService) {}
 
   @Get()
+  @RequirePermission('admin')
   @ApiOperation({ summary: '获取所有权限列表' })
   async getAll() {
     return this.permService.getAll()
@@ -27,7 +28,7 @@ export class PermissionController {
   @RequirePermission('admin')
   @ApiOperation({ summary: '分配权限给用户' })
   async assignToUser(@Body() dto: AssignPermissionsDto, @Request() req) {
-    await this.permService.assignToUser(dto, req.user.id)
+    await this.permService.assignToUser(dto, req.user.userId)
     return { message: '权限分配成功' }
   }
 }

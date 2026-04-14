@@ -12,7 +12,7 @@ export class RatingController {
   @Post()
   @ApiOperation({ summary: '提交评分' })
   create(@Body() createDto: CreateRatingDto, @CurrentUser() user: any) {
-    return this.ratingService.create(createDto, user.userId)
+    return this.ratingService.create(createDto, user.id)
   }
 
   @Get('skill/:skillId')
@@ -24,6 +24,6 @@ export class RatingController {
   @Get('my')
   @ApiOperation({ summary: '我的评分记录' })
   getMyRatings(@CurrentUser() user: any) {
-    return this.ratingService.getMyRatings(user.userId)
+    return this.ratingService.getMyRatings(user.id)
   }
 }
