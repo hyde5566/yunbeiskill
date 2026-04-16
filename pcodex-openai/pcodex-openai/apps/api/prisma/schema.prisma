@@ -1,0 +1,343 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum RoleStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum DepartmentStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum ProjectStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum CategoryStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum LoginResult {
+  SUCCESS
+  FAILURE
+}
+
+enum SkillSourceType {
+  INTERNAL
+  EXTERNAL
+}
+
+enum SkillVisibility {
+  ALL_USERS
+  PROJECT_MEMBERS
+  SPECIFIED_USERS
+}
+
+enum SkillStatus {
+  PENDING_REVIEW
+  IN_REVIEW
+  STORED
+  PUBLISHED
+  OFFLINE
+  REJECTED
+}
+
+enum NotificationType {
+  SKILL_VERSION_RELEASED
+}
+
+model User {
+  id             String          @id @default(cuid())
+  account        String          @unique
+  name           String
+  passwordHash   String          @map("password_hash")
+  departmentId   String          @map("department_id")
+  status         UserStatus      @default(ACTIVE)
+  lastLoginAt    DateTime?       @map("last_login_at")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  department     Department      @relation(fields: [departmentId], references: [id])
+  userRoles      UserRole[]
+  projectMembers ProjectMember[]
+  loginLogs      LoginLog[]
+  submittedSkills Skill[]         @relation("SkillSubmitter")
+  reviewedSkills  Skill[]         @relation("SkillReviewer")
+  publishedSkills Skill[]         @relation("SkillPublisher")
+  skillVisibilities SkillVisibleUser[]
+  skillRatings    SkillRating[]
+  notifications   Notification[]
+  skillDownloads SkillDownloadRecord[] @relation("SkillDownloader")
+
+  @@map("users")
+}
+
+model Role {
+  id              String           @id @default(cuid())
+  code            String           @unique
+  name            String
+  description     String?
+  status          RoleStatus       @default(ACTIVE)
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String           @id @default(cuid())
+  module      String
+  code        String           @unique
+  name        String
+  description String?
+  createdAt   DateTime         @default(now()) @map("created_at")
+  roleLinks   RolePermission[]
+
+  @@map("permissions")
+}
+
+model UserRole {
+  userId String @map("user_id")
+  roleId String @map("role_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  roleId       String     @map("role_id")
+  permissionId String     @map("permission_id")
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model Department {
+  id        String           @id @default(cuid())
+  code      String           @unique
+  name      String
+  parentId  String?          @map("parent_id")
+  sortOrder Int              @default(0) @map("sort_order")
+  status    DepartmentStatus @default(ACTIVE)
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
+  parent    Department?      @relation("DepartmentTree", fields: [parentId], references: [id])
+  children  Department[]     @relation("DepartmentTree")
+  users     User[]
+  skillRatings SkillRating[]
+  skillDownloads SkillDownloadRecord[]
+
+  @@map("departments")
+}
+
+model Project {
+  id          String          @id @default(cuid())
+  name        String          @unique
+  description String?
+  status      ProjectStatus   @default(ACTIVE)
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+  members     ProjectMember[]
+  skills      SkillProject[]
+
+  @@map("projects")
+}
+
+model ProjectMember {
+  projectId String   @map("project_id")
+  userId    String   @map("user_id")
+  joinedAt  DateTime @default(now()) @map("joined_at")
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, userId])
+  @@map("project_members")
+}
+
+model SkillCategory {
+  id        String         @id @default(cuid())
+  code      String         @unique
+  name      String
+  sortOrder Int            @default(0) @map("sort_order")
+  status    CategoryStatus @default(ACTIVE)
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+  skills    Skill[]
+
+  @@map("skill_categories")
+}
+
+model Skill {
+  id               String            @id @default(cuid())
+  seriesId         String?           @map("series_id")
+  versionLabel     String            @default("1.0.0") @map("version_label")
+  isLatestPublished Boolean          @default(false) @map("is_latest_published")
+  name             String
+  summary          String
+  description      String            @db.LongText
+  authorName       String            @map("author_name")
+  categoryId       String            @map("category_id")
+  sourceType       SkillSourceType   @map("source_type")
+  sourceUrl        String?           @map("source_url")
+  sourceLabel      String?           @map("source_label")
+  visibility       SkillVisibility
+  packageName      String            @map("package_name")
+  packageSizeBytes Int               @map("package_size_bytes")
+  packageOriginalName String?        @map("package_original_name")
+  packageStoredName   String?        @map("package_stored_name")
+  packageRelativePath String?        @map("package_relative_path")
+  packageMimeType     String?        @map("package_mime_type")
+  packageChecksum     String?        @map("package_checksum")
+  packageUploadedAt   DateTime?      @map("package_uploaded_at")
+  changelog        String            @db.LongText
+  submitterId      String            @map("submitter_id")
+  status           SkillStatus       @default(PENDING_REVIEW)
+  reviewComment    String?           @map("review_comment") @db.LongText
+  reviewedById     String?           @map("reviewed_by_id")
+  reviewedAt       DateTime?         @map("reviewed_at")
+  publishedById    String?           @map("published_by_id")
+  publishedAt      DateTime?         @map("published_at")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+  category         SkillCategory     @relation(fields: [categoryId], references: [id])
+  submitter        User              @relation("SkillSubmitter", fields: [submitterId], references: [id])
+  reviewedBy       User?             @relation("SkillReviewer", fields: [reviewedById], references: [id])
+  publishedBy      User?             @relation("SkillPublisher", fields: [publishedById], references: [id])
+  projects         SkillProject[]
+  visibleUsers     SkillVisibleUser[]
+  ratings          SkillRating[]
+  downloads        SkillDownloadRecord[]
+
+  @@index([seriesId, createdAt])
+  @@index([status, isLatestPublished])
+  @@index([categoryId])
+  @@map("skills")
+}
+
+model SkillProject {
+  skillId    String   @map("skill_id")
+  projectId  String   @map("project_id")
+  attachedAt DateTime @default(now()) @map("attached_at")
+  skill      Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@id([skillId, projectId])
+  @@map("skill_projects")
+}
+
+model SkillVisibleUser {
+  skillId    String   @map("skill_id")
+  userId     String   @map("user_id")
+  attachedAt DateTime @default(now()) @map("attached_at")
+  skill      Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([skillId, userId])
+  @@map("skill_visible_users")
+}
+
+model SkillRating {
+  id             String      @id @default(cuid())
+  seriesId       String      @map("series_id")
+  skillId        String?     @map("skill_id")
+  raterId        String      @map("rater_id")
+  departmentId   String?     @map("department_id")
+  departmentName String      @map("department_name")
+  rating         Int
+  feedback       String      @db.LongText
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+  skill          Skill?      @relation(fields: [skillId], references: [id], onDelete: SetNull)
+  rater          User        @relation(fields: [raterId], references: [id], onDelete: Cascade)
+  department     Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+  @@unique([seriesId, raterId])
+  @@index([seriesId])
+  @@map("skill_ratings")
+}
+
+model SkillDownloadRecord {
+  id             String      @id @default(cuid())
+  skillId        String      @map("skill_id")
+  seriesId       String      @map("series_id")
+  downloaderId   String      @map("downloader_id")
+  departmentId   String?     @map("department_id")
+  departmentName String      @map("department_name")
+  skillName      String      @map("skill_name")
+  versionLabel   String      @map("version_label")
+  downloadedAt   DateTime    @default(now()) @map("downloaded_at")
+  skill          Skill       @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  downloader     User        @relation("SkillDownloader", fields: [downloaderId], references: [id], onDelete: Cascade)
+  department     Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+  @@index([downloaderId, downloadedAt])
+  @@index([seriesId, downloadedAt])
+  @@map("skill_download_records")
+}
+
+model Notification {
+  id             String            @id @default(cuid())
+  userId         String            @map("user_id")
+  type           NotificationType
+  title          String
+  content        String            @db.LongText
+  isRead         Boolean           @default(false) @map("is_read")
+  readAt         DateTime?         @map("read_at")
+  skillSeriesId  String?           @map("skill_series_id")
+  skillId        String?           @map("skill_id")
+  versionLabel   String?           @map("version_label")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model LoginLog {
+  id            String      @id @default(cuid())
+  account       String
+  userId        String?     @map("user_id")
+  loginAt       DateTime    @default(now()) @map("login_at")
+  loginIp       String?     @map("login_ip")
+  result        LoginResult
+  failureReason String?     @map("failure_reason")
+  user          User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("login_logs")
+}
+
+model OperationLog {
+  id            String   @id @default(cuid())
+  operatorId    String?  @map("operator_id")
+  operatorName  String   @map("operator_name")
+  module        String
+  operationType String   @map("operation_type")
+  targetType    String   @map("target_type")
+  targetId      String?  @map("target_id")
+  detailJson    String   @map("detail_json") @db.LongText
+  operatedAt    DateTime @default(now()) @map("operated_at")
+
+  @@map("operation_logs")
+}
